@@ -47,7 +47,7 @@
 
                 <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
                     <label><b>Archivo XML (Exportado de Timeline):</b></label><br>
-                    <input type="file" id="input-xml" accept=".xml" required style="margin-top: 10px;">
+                    <input type="file" id="input-xml" accept=".xml" style="margin-top: 10px;">
                 </div>
 
                 <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
@@ -66,52 +66,71 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const file = document.getElementById('input-xml').files[0];
-            if (!file) return;
 
+            // Cambiamos el estado de la UI
             btn.disabled = true;
             btn.textContent = "Procesando...";
             mensaje.style.color = "blue";
-            mensaje.textContent = "Leyendo XML y guardando en la nube...";
+            mensaje.textContent = "Guardando en la nube...";
 
-            const reader = new FileReader();
-            reader.onload = async function(evento) {
-                try {
-                    const contenidoXML = evento.target.result;
-                    const estadisticas = procesarXML(contenidoXML);
-
-                    const partidoNuevo = {
-                        rival: document.getElementById('input-rival').value,
-                        fecha: document.getElementById('input-fecha').value,
-                        torneo: document.getElementById('input-torneo').value,
-                        youtube_id: document.getElementById('input-youtube').value,
-                        estadisticas: estadisticas,
-                        creado_el: new Date()
-                    };
-
-                    await addDoc(collection(db, "partidos"), partidoNuevo);
-                    
-                    mensaje.style.color = "green";
-                    mensaje.textContent = "¡Éxito! Redirigiendo al historial...";
-                    
-                    setTimeout(() => {
-                        window.location.href = "../index.html";
-                    }, 2000);
-
-                } catch (error) {
-                    console.error("Error al guardar: ", error);
-                    mensaje.style.color = "red";
-                    mensaje.textContent = "Error al subir a Firebase.";
-                    btn.disabled = false;
-                    btn.textContent = "Reintentar";
-                }
+            // Armamos la base del partido con los datos del formulario
+            const partidoNuevo = {
+                rival: document.getElementById('input-rival').value,
+                fecha: document.getElementById('input-fecha').value,
+                torneo: document.getElementById('input-torneo').value,
+                youtube_id: document.getElementById('input-youtube').value,
+                creado_el: new Date()
             };
-            reader.readAsText(file);
+
+            try {
+                if (file) {
+                    // Caso A: El usuario subió un XML
+                    const reader = new FileReader();
+                    reader.onload = async function(evento) {
+                        try {
+                            const contenidoXML = evento.target.result;
+                            partidoNuevo.estadisticas = procesarXML(contenidoXML);
+                            await guardarEnFirebase(partidoNuevo);
+                        } catch (error) {
+                            mostrarError(error);
+                        }
+                    };
+                    reader.readAsText(file);
+                } else {
+                    // Caso B: No hay XML, guardamos con estadísticas vacías
+                    partidoNuevo.estadisticas = {}; 
+                    await guardarEnFirebase(partidoNuevo);
+                }
+            } catch (error) {
+                mostrarError(error);
+            }
         });
 
+        // Función auxiliar para no repetir código al guardar
+        async function guardarEnFirebase(datosPartido) {
+            await addDoc(collection(db, "partidos"), datosPartido);
+            mensaje.style.color = "green";
+            mensaje.textContent = "¡Éxito! Redirigiendo al historial...";
+            
+            setTimeout(() => {
+                window.location.href = "../index.html";
+            }, 2000);
+        }
+
+        // Función auxiliar para manejar errores visuales
+        function mostrarError(error) {
+            console.error("Error al guardar: ", error);
+            mensaje.style.color = "red";
+            mensaje.textContent = "Error al subir a Firebase.";
+            btn.disabled = false;
+            btn.textContent = "Reintentar";
+        }
+
+        // Función de parseo
         function procesarXML(xmlString) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlString, "text/xml");
