@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Partido - TC Hockey</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <ul class="nav-links">
+            <li><a href="../index.html">Historial</a></li>
+            <li><a href="carga.html">Cargar Partido</a></li>
+        </ul>
+    </nav>
+
+    <div class="container-dashboard">
+        <div class="header-stats">
+            <h2>Editar Partido</h2>
+            <p class="subtitle">Modificá los datos. Si no subís un nuevo XML, se mantendrán las estadísticas anteriores.</p>
+        </div>
+
+        <div class="card-stat" style="display: block;">
+            <form id="form-editar" style="display: flex; flex-direction: column; gap: 15px;">
+                
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label><b>Nombre del Rival:</b></label>
+                        <input type="text" id="input-rival" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label><b>Fecha:</b></label>
+                        <input type="date" id="input-fecha" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label><b>Torneo o Categoría:</b></label>
+                    <input type="text" id="input-torneo" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                </div>
+
+                <div>
+                    <label><b>ID de YouTube:</b></label>
+                    <input type="text" id="input-youtube" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                </div>
+
+                <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
+                    <label><b>Reemplazar XML (Opcional):</b></label><br>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Solo subí un archivo si querés sobrescribir los cortes anteriores.</p>
+                    <input type="file" id="input-xml" accept=".xml">
+                </div>
+
+                <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer; background-color: var(--tc-blue);">
+                    💾 Guardar Cambios
+                </button>
+                
+                <p id="mensaje-estado" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, doc, getDoc, updateDoc } from '../assets/js/firebase.js';
+
+        const idAEditar = sessionStorage.getItem('partidoAEditarId');
+        const form = document.getElementById('form-editar');
+        const mensaje = document.getElementById('mensaje-estado');
+        const btn = document.getElementById('btn-submit');
+
+        let estadisticasViejas = {}; // Para no borrarlas si no sube XML nuevo
+
+        // 1. Al cargar la página, traemos los datos actuales y los pegamos en los inputs
+        async function cargarDatosParaEditar() {
+            if (!idAEditar) {
+                window.location.href = "../index.html";
+                return;
+            }
+            try {
+                const docSnap = await getDoc(doc(db, "partidos", idAEditar));
+                if (docSnap.exists()) {
+                    const datos = docSnap.data();
+                    document.getElementById('input-rival').value = datos.rival;
+                    document.getElementById('input-fecha').value = datos.fecha;
+                    document.getElementById('input-torneo').value = datos.torneo;
+                    document.getElementById('input-youtube').value = datos.youtube_id;
+                    estadisticasViejas = datos.estadisticas; // Guardamos un respaldo
+                }
+            } catch (error) {
+                console.error("Error trayendo datos", error);
+            }
+        }
+
+        // 2. Al mandar el formulario, actualizamos la base de datos
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            btn.disabled = true;
+            btn.textContent = "Actualizando...";
+            mensaje.style.color = "blue";
+            mensaje.textContent = "Guardando cambios en Firebase...";
+
+            const file = document.getElementById('input-xml').files[0];
+            
+            // Armamos los datos base a actualizar
+            const datosActualizados = {
+                rival: document.getElementById('input-rival').value,
+                fecha: document.getElementById('input-fecha').value,
+                torneo: document.getElementById('input-torneo').value,
+                youtube_id: document.getElementById('input-youtube').value,
+                modificado_el: new Date()
+            };
+
+            // Si el usuario subió un XML nuevo, lo procesamos
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async function(evento) {
+                    try {
+                        datosActualizados.estadisticas = procesarXML(evento.target.result);
+                        await subirActualizacion(datosActualizados);
+                    } catch (error) {
+                        mostrarError(error);
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                // Si no subió XML, actualizamos manteniendo las estadísticas viejas
+                try {
+                    await subirActualizacion(datosActualizados);
+                } catch (error) {
+                    mostrarError(error);
+                }
+            }
+        });
+
+        async function subirActualizacion(datos) {
+            const docRef = doc(db, "partidos", idAEditar);
+            await updateDoc(docRef, datos);
+            mensaje.style.color = "green";
+            mensaje.textContent = "¡Actualizado con éxito! Volviendo...";
+            setTimeout(() => { window.location.href = "../index.html"; }, 1500);
+        }
+
+        function mostrarError(error) {
+            console.error("Error:", error);
+            mensaje.style.color = "red";
+            mensaje.textContent = "Error al actualizar.";
+            btn.disabled = false;
+            btn.textContent = "Reintentar";
+        }
+
+        function procesarXML(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+            const eventos = xmlDoc.getElementsByTagName("evento"); 
+            const resultado = {}; 
+            for (let i = 0; i < eventos.length; i++) {
+                let categoria = eventos[i].getElementsByTagName("categoria")[0].textContent;
+                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent); 
+                let nodosTags = eventos[i].getElementsByTagName("descriptor");
+                let tags = [];
+                for (let j = 0; j < nodosTags.length; j++) { tags.push(nodosTags[j].textContent); }
+                if (!resultado[categoria]) resultado[categoria] = []; 
+                resultado[categoria].push({ t: tiempo, d: tags });
+            }
+            return resultado;
+        }
+
+        cargarDatosParaEditar();
+    </script>
+</body>
+</html>

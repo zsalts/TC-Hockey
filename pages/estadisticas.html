@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estadísticas - TC Hockey</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <ul class="nav-links">
+            <li><a href="../index.html">Historial</a></li>
+            <li><a href="video.html">Video</a></li>
+            <li><a href="estadisticas.html" class="active">Estadísticas</a></li>
+        </ul>
+    </nav>
+
+    <div class="container-dashboard">
+        <div class="header-stats">
+            <h2 id="header-rival" style="color: var(--tc-blue);">Estadísticas</h2>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dash-tile">
+                <span class="dash-label">GOLES</span>
+                <span class="dash-num" id="stat-Gol">0</span>
+            </div>
+            
+            <div class="dash-tile">
+                <span class="dash-label">ATAQUES</span>
+                <span class="dash-num" id="stat-Ataques">0</span>
+            </div>
+            
+            <div class="dash-tile">
+                <span class="dash-label">INGRESOS AL AREA</span>
+                <span class="dash-num" id="stat-Ingreso al area">0</span>
+            </div>
+            
+            <div class="dash-tile">
+                <span class="dash-label">TIROS AL ARCO</span>
+                <span class="dash-num" id="stat-Tiro al arco">0</span>
+            </div>
+            
+            <div class="dash-tile">
+                <span class="dash-label">CORNER CORTOS</span>
+                <span class="dash-num" id="stat-Corner Corto a Favor">0</span>
+            </div>
+            
+            <div class="dash-tile">
+                <span class="dash-label">RECUPERACIONES</span>
+                <span class="dash-num" id="stat-Recuperacion Alta">0</span>
+            </div>
+
+            <div class="dash-tile">
+                <span class="dash-label">TARJETAS VERDES</span>
+                <span class="dash-num" id="stat-Tarjeta Verde">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, doc, getDoc } from '../assets/js/firebase.js';
+
+        async function cargarPanel() {
+            const partidoId = sessionStorage.getItem('partidoSeleccionadoId');
+            if (!partidoId) return;
+
+            const docSnap = await getDoc(doc(db, "partidos", partidoId));
+            
+            if (docSnap.exists()) {
+                const partido = docSnap.data();
+                document.getElementById('header-rival').textContent = `Panel Estadístico vs ${partido.rival}`;
+
+                const categoriasMapping = [
+                    "Gol", "Ataques", "Ingreso al area", 
+                    "Tiro al arco", "Corner Corto a Favor", 
+                    "Recuperacion Alta", "Tarjeta Verde"
+                ];
+
+                categoriasMapping.forEach(cat => {
+                    const el = document.getElementById(`stat-${cat}`);
+                    if (el && partido.estadisticas[cat]) {
+                        el.textContent = partido.estadisticas[cat].length;
+                    }
+                });
+            }
+        }
+
+        cargarPanel();
+    </script>
+</body>
+</html>
