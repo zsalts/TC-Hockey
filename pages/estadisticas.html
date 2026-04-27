@@ -4,6 +4,62 @@
     <meta charset="UTF-8">
     <title>Estadísticas - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .comparativa-container { display: flex; gap: 30px; margin-top: 20px; }
+        @media (max-width: 768px) { .comparativa-container { flex-direction: column; } }
+
+        .columna-equipo { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+
+        .titulo-nuestro { 
+            background: var(--tc-blue); color: white; padding: 15px; 
+            text-align: center; border-radius: 8px; margin-bottom: 5px; font-weight: 900;
+        }
+        
+        .titulo-rival { 
+            background: #343a40; color: white; padding: 15px; 
+            text-align: center; border-radius: 8px; margin-bottom: 5px; font-weight: 900;
+        }
+
+        .stat-card {
+            background: white; padding: 15px 20px; border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex;
+            flex-direction: column; border-left: 5px solid #ccc;
+        }
+
+        .card-nuestro { border-left-color: var(--tc-blue); }
+        .card-rival { border-left-color: #343a40; }
+
+        .stat-card h3 {
+            color: #333; font-size: 1rem; text-transform: uppercase;
+            margin-bottom: 10px; font-weight: 900; border-bottom: 2px solid #eee; padding-bottom: 8px;
+        }
+
+        .stat-header {
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 10px; padding: 5px 10px; border-radius: 6px; transition: 0.2s;
+        }
+
+        .stat-title { font-size: 1.1rem; font-weight: bold; color: #555;}
+        
+        .stat-total { font-size: 2.2rem; font-weight: 900; color: var(--tc-blue); line-height: 1; }
+        .stat-total.dark { color: #343a40; }
+
+        .stat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 10px; border-bottom: 1px dashed #eee; font-size: 0.9rem;
+            border-radius: 6px; transition: 0.2s; margin-bottom: 2px;
+        }
+
+        .stat-row:last-child { border-bottom: none; }
+        .stat-row .label { color: #666; }
+        .stat-row .value { font-weight: bold; color: #333; font-size: 1rem; }
+
+        .winner-bg {
+            background-color: rgba(0, 0, 0, 0.08); 
+            border-bottom: none; 
+        }
+
+    </style>
 </head>
 <body>
 
@@ -18,72 +74,269 @@
 
     <div class="container-dashboard">
         <div class="header-stats">
-            <h2 id="header-rival" style="color: var(--tc-blue);">Estadísticas</h2>
+            <h2 id="header-rival" style="color: var(--tc-blue);">Panel de Control</h2>
+            <p class="subtitle">Análisis comparativo de rendimiento</p>
         </div>
 
-        <div class="dashboard-grid">
-            <div class="dash-tile">
-                <span class="dash-label">GOLES</span>
-                <span class="dash-num" id="stat-Gol">0</span>
+        <div id="panel-estadisticas" class="comparativa-container">
             </div>
-            
-            <div class="dash-tile">
-                <span class="dash-label">ATAQUES</span>
-                <span class="dash-num" id="stat-Ataques">0</span>
-            </div>
-            
-            <div class="dash-tile">
-                <span class="dash-label">INGRESOS AL AREA</span>
-                <span class="dash-num" id="stat-Ingreso al area">0</span>
-            </div>
-            
-            <div class="dash-tile">
-                <span class="dash-label">TIROS AL ARCO</span>
-                <span class="dash-num" id="stat-Tiro al arco">0</span>
-            </div>
-            
-            <div class="dash-tile">
-                <span class="dash-label">CORNER CORTOS</span>
-                <span class="dash-num" id="stat-Corner Corto a Favor">0</span>
-            </div>
-            
-            <div class="dash-tile">
-                <span class="dash-label">RECUPERACIONES</span>
-                <span class="dash-num" id="stat-Recuperacion Alta">0</span>
-            </div>
-
-            <div class="dash-tile">
-                <span class="dash-label">TARJETAS VERDES</span>
-                <span class="dash-num" id="stat-Tarjeta Verde">0</span>
-            </div>
-        </div>
     </div>
 
     <script type="module">
         import { db, doc, getDoc } from '../assets/js/firebase.js';
 
+        function limpiar(texto) {
+            return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        }
+
+        const win = (a, b) => a > b ? 'winner-bg' : '';
+
         async function cargarPanel() {
             const partidoId = sessionStorage.getItem('partidoSeleccionadoId');
-            if (!partidoId) return;
+            if (!partidoId) {
+                window.location.href = "../index.html";
+                return;
+            }
 
-            const docSnap = await getDoc(doc(db, "partidos", partidoId));
-            
-            if (docSnap.exists()) {
-                const partido = docSnap.data();
-                document.getElementById('header-rival').textContent = `Panel Estadístico vs ${partido.rival}`;
+            try {
+                const docSnap = await getDoc(doc(db, "partidos", partidoId));
+                
+                if (docSnap.exists()) {
+                    const partido = docSnap.data();
+                    
+                    const eq1 = partido.mi_equipo || 'NUESTRO EQUIPO';
+                    const eq2 = partido.rival || 'EQUIPO RIVAL';
 
-                const categoriasMapping = [
-                    "Gol", "Ataques", "Ingreso al area", 
-                    "Tiro al arco", "Corner Corto a Favor", 
-                    "Recuperacion Alta", "Tarjeta Verde"
-                ];
+                    document.getElementById('header-rival').textContent = `Comparativa: ${eq1} vs ${eq2}`;
+                    
+                    const est = partido.estadisticas;
+                    
+                    let accionesNuestras = 0; let ccNuestros = 0;
+                    let golesCC = 0, golesJugada = 0;
+                    let ingresosNuestrosTotal = 0; const ingresosNuestrosTipo = { 'flick': 0, 'penetracion': 0, 'pase_dividida': 0 };
+                    let tirosNuestrosTotal = 0; const tirosNuestrosResultado = { 'gol': 0, 'atajada': 0, 'error': 0 };
+                    let recupTotal = 0; const recupZonas = { 'C1': 0, 'C2': 0, 'C3': 0, 'C4': 0, 'Sin zona': 0 }; 
 
-                categoriasMapping.forEach(cat => {
-                    const el = document.getElementById(`stat-${cat}`);
-                    if (el && partido.estadisticas[cat]) {
-                        el.textContent = partido.estadisticas[cat].length;
+                    let accionesRivales = 0; let ccRivales = 0;
+                    let golesContraCC = 0, golesContraJugada = 0; 
+                    let ingresosRivalesTotal = 0; const ingresosRivalesTipo = { 'flick': 0, 'penetracion': 0, 'pase_dividida': 0 };
+                    let tirosRivalesTotal = 0; const tirosRivalesResultado = { 'gol': 0, 'atajada': 0, 'error': 0 };
+                    let perdidasTotal = 0; const perdidasZonas = { 'C1': 0, 'C2': 0, 'C3': 0, 'C4': 0, 'Sin zona': 0 };
+
+                    for (const [categoriaReal, cortes] of Object.entries(est)) {
+                        const cat = limpiar(categoriaReal);
+                        const cantCortes = cortes.length;
+
+                        const esDeRival = cat.includes("contra") || cat.includes("rival") || cat.includes("perdida");
+                        
+                        if (esDeRival) accionesRivales += cantCortes;
+                        else accionesNuestras += cantCortes;
+
+                        if (cat.includes("cortos") || cat.includes("cc")) {
+                            if (esDeRival) ccRivales += cantCortes;
+                            else ccNuestros += cantCortes;
+                        }
+
+                        if (cat === "tiro al arco" || cat === "tiros") tirosNuestrosTotal += cantCortes;
+                        else if (cat === "tiro arco contra" || cat.includes("tiro rival")) tirosRivalesTotal += cantCortes;
+
+                        if (cat === "ingresos al area" || cat === "ingreso") ingresosNuestrosTotal += cantCortes;
+                        else if (cat === "ingreso area rival" || cat.includes("ingreso rival")) ingresosRivalesTotal += cantCortes;
+
+                        if (cat === "recuperaciones" || cat === "recuperacion") recupTotal += cantCortes;
+                        else if (cat === "perdidas" || cat === "perdida") perdidasTotal += cantCortes;
+
+                        cortes.forEach(c => {
+                            let tagsLimpios = c.d ? c.d.map(t => limpiar(t)) : [];
+
+                            if (tagsLimpios.includes("gol")) {
+                                let esBotonCC = cat.includes("corto") || cat.includes("cc");
+                                if (esBotonCC) {
+                                    if (esDeRival) golesContraCC++; else golesCC++;
+                                } else {
+                                    if (esDeRival) golesContraJugada++; else golesJugada++;
+                                }
+                            }
+
+                            if (cat === "tiro al arco" || cat === "tiros") {
+                                if (tagsLimpios.includes("gol")) tirosNuestrosResultado['gol']++;
+                                else if (tagsLimpios.includes("atajada") || tagsLimpios.includes("atajado")) tirosNuestrosResultado['atajada']++;
+                                else if (tagsLimpios.includes("error") || tagsLimpios.includes("afuera")) tirosNuestrosResultado['error']++;
+                            }
+                            if (cat === "tiro arco contra" || cat.includes("tiro rival")) {
+                                if (tagsLimpios.includes("gol") || tagsLimpios.includes("success")) tirosRivalesResultado['gol']++;
+                                else if (tagsLimpios.includes("atajada") || tagsLimpios.includes("atajado")) tirosRivalesResultado['atajada']++;
+                                else if (tagsLimpios.includes("error") || tagsLimpios.includes("failure")) tirosRivalesResultado['error']++;
+                            }
+
+                            if (cat === "ingresos al area" || cat === "ingreso") {
+                                if (tagsLimpios.includes("flick")) ingresosNuestrosTipo['flick']++;
+                                else if (tagsLimpios.includes("penetracion")) ingresosNuestrosTipo['penetracion']++;
+                                else if (tagsLimpios.includes("pase") || tagsLimpios.includes("pases") || tagsLimpios.includes("dividida")) ingresosNuestrosTipo['pase_dividida']++;
+                            }
+                            if (cat === "ingreso area rival" || cat.includes("ingreso rival")) {
+                                if (tagsLimpios.includes("flick")) ingresosRivalesTipo['flick']++;
+                                else if (tagsLimpios.includes("penetracion")) ingresosRivalesTipo['penetracion']++;
+                                else if (tagsLimpios.includes("pase") || tagsLimpios.includes("pases") || tagsLimpios.includes("dividida")) ingresosRivalesTipo['pase_dividida']++;
+                            }
+
+                            if (cat === "recuperaciones" || cat === "recuperacion") {
+                                let tieneZona = false;
+                                tagsLimpios.forEach(t => {
+                                    if (t === "c1" || t === "c2" || t === "c3" || t === "c4") {
+                                        recupZonas[t.toUpperCase()]++; tieneZona = true;
+                                    }
+                                });
+                                if (!tieneZona) recupZonas['Sin zona']++;
+                            }
+
+                            if (cat === "perdidas" || cat === "perdida") {
+                                let tieneZona = false;
+                                tagsLimpios.forEach(t => {
+                                    if (t === "c1" || t === "c2" || t === "c3" || t === "c4") {
+                                        perdidasZonas[t.toUpperCase()]++; tieneZona = true;
+                                    }
+                                });
+                                if (!tieneZona) perdidasZonas['Sin zona']++;
+                            }
+                        });
                     }
-                });
+
+                    let totalAccionesPartido = accionesNuestras + accionesRivales;
+                    let posNuestraPct = 0; let posRivalPct = 0;
+                    if (totalAccionesPartido > 0) {
+                        posNuestraPct = Math.round((accionesNuestras / totalAccionesPartido) * 100);
+                        posRivalPct = 100 - posNuestraPct;
+                    }
+
+                    let golesTotalesNuestros = golesCC + golesJugada;
+                    let golesTotalesRivales = golesContraCC + golesContraJugada;
+
+                    const contenedor = document.getElementById('panel-estadisticas');
+
+                    // ================= COLUMNA EQ 1 (NUESTRA) =================
+                    let colNuestra = `
+                        <div class="columna-equipo">
+                            <h2 class="titulo-nuestro">${eq1.toUpperCase()}</h2>
+
+                            <div class="stat-card card-nuestro">
+                                <div class="stat-header ${win(posNuestraPct, posRivalPct)}">
+                                    <span class="stat-title">Posesión Total</span>
+                                    <span class="stat-total">${posNuestraPct}%</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-nuestro">
+                                <div class="stat-header ${win(golesTotalesNuestros, golesTotalesRivales)}">
+                                    <span class="stat-title">Goles</span>
+                                    <span class="stat-total">${golesTotalesNuestros}</span>
+                                </div>
+                                <div class="stat-row ${win(golesJugada, golesContraJugada)}"><span class="label">De Jugada</span><span class="value">${golesJugada}</span></div>
+                                <div class="stat-row ${win(golesCC, golesContraCC)}"><span class="label">De Córner Corto</span><span class="value">${golesCC}</span></div>
+                            </div>
+
+                            <div class="stat-card card-nuestro">
+                                <div class="stat-header ${win(ccNuestros, ccRivales)}">
+                                    <span class="stat-title">Córner Cortos Generados</span>
+                                    <span class="stat-total">${ccNuestros}</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-nuestro">
+                                <div class="stat-header ${win(tirosNuestrosTotal, tirosRivalesTotal)}">
+                                    <span class="stat-title">Tiros al Arco</span>
+                                    <span class="stat-total">${tirosNuestrosTotal}</span>
+                                </div>
+                                <div class="stat-row ${win(tirosNuestrosResultado['gol'], tirosRivalesResultado['gol'])}"><span class="label">Terminó en Gol</span><span class="value">${tirosNuestrosResultado['gol']}</span></div>
+                                <div class="stat-row ${win(tirosNuestrosResultado['atajada'], tirosRivalesResultado['atajada'])}"><span class="label">Atajadas</span><span class="value">${tirosNuestrosResultado['atajada']}</span></div>
+                                <div class="stat-row ${win(tirosNuestrosResultado['error'], tirosRivalesResultado['error'])}"><span class="label">Error / Afuera</span><span class="value">${tirosNuestrosResultado['error']}</span></div>
+                            </div>
+
+                            <div class="stat-card card-nuestro">
+                                <div class="stat-header ${win(ingresosNuestrosTotal, ingresosRivalesTotal)}">
+                                    <span class="stat-title">Ingresos al Área</span>
+                                    <span class="stat-total">${ingresosNuestrosTotal}</span>
+                                </div>
+                                <div class="stat-row ${win(ingresosNuestrosTipo['pase_dividida'], ingresosRivalesTipo['pase_dividida'])}"><span class="label">Pase / Dividida</span><span class="value">${ingresosNuestrosTipo['pase_dividida']}</span></div>
+                                <div class="stat-row ${win(ingresosNuestrosTipo['penetracion'], ingresosRivalesTipo['penetracion'])}"><span class="label">Penetración</span><span class="value">${ingresosNuestrosTipo['penetracion']}</span></div>
+                                <div class="stat-row ${win(ingresosNuestrosTipo['flick'], ingresosRivalesTipo['flick'])}"><span class="label">Flick</span><span class="value">${ingresosNuestrosTipo['flick']}</span></div>
+                            </div>
+
+                            <div class="stat-card card-nuestro">
+                                <div class="stat-header ${win(recupTotal, perdidasTotal)}">
+                                    <span class="stat-title">Recuperaciones (Quites)</span>
+                                    <span class="stat-total">${recupTotal}</span>
+                                </div>
+                    `;
+                    ['C1', 'C2', 'C3', 'C4'].forEach(zona => { 
+                        colNuestra += `<div class="stat-row ${win(recupZonas[zona], perdidasZonas[zona])}"><span class="label">En Zona ${zona}</span><span class="value">${recupZonas[zona]}</span></div>`; 
+                    });
+                    colNuestra += `</div></div>`;
+
+                    // ================= COLUMNA EQ 2 (RIVAL) =================
+                    let colRival = `
+                        <div class="columna-equipo">
+                            <h2 class="titulo-rival">${eq2.toUpperCase()}</h2>
+
+                            <div class="stat-card card-rival">
+                                <div class="stat-header ${win(posRivalPct, posNuestraPct)}">
+                                    <span class="stat-title">Posesión Total</span>
+                                    <span class="stat-total dark">${posRivalPct}%</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-rival">
+                                <div class="stat-header ${win(golesTotalesRivales, golesTotalesNuestros)}">
+                                    <span class="stat-title">Goles</span>
+                                    <span class="stat-total dark">${golesTotalesRivales}</span>
+                                </div>
+                                <div class="stat-row ${win(golesContraJugada, golesJugada)}"><span class="label">De Jugada</span><span class="value">${golesContraJugada}</span></div>
+                                <div class="stat-row ${win(golesContraCC, golesCC)}"><span class="label">De Córner Corto</span><span class="value">${golesContraCC}</span></div>
+                            </div>
+
+                            <div class="stat-card card-rival">
+                                <div class="stat-header ${win(ccRivales, ccNuestros)}">
+                                    <span class="stat-title">Córner Cortos Generados</span>
+                                    <span class="stat-total dark">${ccRivales}</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-rival">
+                                <div class="stat-header ${win(tirosRivalesTotal, tirosNuestrosTotal)}">
+                                    <span class="stat-title">Tiros al Arco</span>
+                                    <span class="stat-total dark">${tirosRivalesTotal}</span>
+                                </div>
+                                <div class="stat-row ${win(tirosRivalesResultado['gol'], tirosNuestrosResultado['gol'])}"><span class="label">Terminó en Gol</span><span class="value">${tirosRivalesResultado['gol']}</span></div>
+                                <div class="stat-row ${win(tirosRivalesResultado['atajada'], tirosNuestrosResultado['atajada'])}"><span class="label">Atajadas (Ntras)</span><span class="value">${tirosRivalesResultado['atajada']}</span></div>
+                                <div class="stat-row ${win(tirosRivalesResultado['error'], tirosNuestrosResultado['error'])}"><span class="label">Error / Afuera</span><span class="value">${tirosRivalesResultado['error']}</span></div>
+                            </div>
+
+                            <div class="stat-card card-rival">
+                                <div class="stat-header ${win(ingresosRivalesTotal, ingresosNuestrosTotal)}">
+                                    <span class="stat-title">Ingresos al Área</span>
+                                    <span class="stat-total dark">${ingresosRivalesTotal}</span>
+                                </div>
+                                <div class="stat-row ${win(ingresosRivalesTipo['pase_dividida'], ingresosNuestrosTipo['pase_dividida'])}"><span class="label">Pase / Dividida</span><span class="value">${ingresosRivalesTipo['pase_dividida']}</span></div>
+                                <div class="stat-row ${win(ingresosRivalesTipo['penetracion'], ingresosNuestrosTipo['penetracion'])}"><span class="label">Penetración</span><span class="value">${ingresosRivalesTipo['penetracion']}</span></div>
+                                <div class="stat-row ${win(ingresosRivalesTipo['flick'], ingresosNuestrosTipo['flick'])}"><span class="label">Flick</span><span class="value">${ingresosRivalesTipo['flick']}</span></div>
+                            </div>
+
+                            <div class="stat-card card-rival">
+                                <div class="stat-header ${win(perdidasTotal, recupTotal)}">
+                                    <span class="stat-title">Recuperaciones (Pérdidas Ntras)</span>
+                                    <span class="stat-total dark">${perdidasTotal}</span>
+                                </div>
+                    `;
+                    ['C1', 'C2', 'C3', 'C4'].forEach(zona => { 
+                        colRival += `<div class="stat-row ${win(perdidasZonas[zona], recupZonas[zona])}"><span class="label">En Zona ${zona}</span><span class="value">${perdidasZonas[zona]}</span></div>`; 
+                    });
+                    colRival += `</div></div>`;
+
+                    contenedor.innerHTML = colNuestra + colRival;
+                }
+            } catch (error) {
+                console.error("Error al cargar estadísticas:", error);
+                document.getElementById('header-rival').textContent = "Error al cargar los datos.";
             }
         }
 

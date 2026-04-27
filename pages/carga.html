@@ -8,7 +8,7 @@
 <body>
 
     <nav class="navbar">
-        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="carga.html" class="active">Cargar Partido</a></li>
@@ -26,18 +26,24 @@
                 
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
-                        <label><b>Nombre del Rival:</b></label>
-                        <input type="text" id="input-rival" placeholder="Ej: Club Universitario" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <label><b>Equipo 1 (Nuestra Columna):</b></label>
+                        <input type="text" id="input-mi-equipo" placeholder="Ej: Mi Equipo" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label><b>Equipo 2 (Columna Rival):</b></label>
+                        <input type="text" id="input-rival" placeholder="Ej: Mar del Plata Club" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label><b>Torneo o Categoría:</b></label>
+                        <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial" required style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
                         <input type="date" id="input-fecha" required style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
-                </div>
-
-                <div>
-                    <label><b>Torneo o Categoría:</b></label>
-                    <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial Mar del Plata" required style="width: 100%; padding: 10px; margin-top: 5px;">
                 </div>
 
                 <div>
@@ -83,7 +89,6 @@
                     const contenidoArchivo = evento.target.result;
                     let estadisticas;
 
-                    // Si empieza con { es LongoMatch (JSON), sino Timeline (XML)
                     if (contenidoArchivo.trim().startsWith("{")) {
                         estadisticas = procesarLGM(contenidoArchivo);
                     } else {
@@ -91,6 +96,7 @@
                     }
 
                     const partidoNuevo = {
+                        mi_equipo: document.getElementById('input-mi-equipo').value,
                         rival: document.getElementById('input-rival').value,
                         fecha: document.getElementById('input-fecha').value,
                         torneo: document.getElementById('input-torneo').value,
@@ -119,7 +125,6 @@
             reader.readAsText(file);
         });
 
-        // 1. Lógica para masticar LongoMatch (.lgm) con corrección
         function procesarLGM(jsonString) {
             const data = JSON.parse(jsonString);
             const eventos = data.Timeline; 
@@ -127,8 +132,6 @@
 
             for (let i = 0; i < eventos.length; i++) {
                 let ev = eventos[i];
-                
-                // Usamos includes() para agarrar el evento sin problemas
                 if (!ev.$type || !ev.$type.includes("TimelineEvent")) continue;
 
                 let categoria = ev.Name.replace(/\s\d+$/, ""); 
@@ -147,7 +150,6 @@
             return resultado;
         }
 
-        // 2. Lógica para masticar Timeline (.xml)
         function procesarXML(xmlString) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlString, "text/xml");

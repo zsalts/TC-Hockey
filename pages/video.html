@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <title>Video Análisis - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .cat-details { margin-bottom: 10px; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .cat-details > summary { background: var(--tc-blue); color: white; padding: 15px; font-weight: bold; cursor: pointer; list-style: none; font-size: 1.1rem; }
+        .cat-details > summary::-webkit-details-marker { display: none; }
+        
+        .desc-details { margin: 10px 15px; border-left: 3px solid var(--tc-yellow); padding-left: 15px; background: #f9f9f9; border-radius: 0 6px 6px 0;}
+        .desc-details > summary { color: #333; font-weight: bold; cursor: pointer; padding: 10px 0; list-style: none; border-bottom: 1px solid #eee; }
+        .desc-details > summary::-webkit-details-marker { display: none; }
+        
+        .botones-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0; }
+    </style>
 </head>
 <body>
 
@@ -24,8 +35,8 @@
                 <div id="player"></div>
             </div>
 
-            <div class="columna-cortes-scroll" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 600px; overflow-y: auto;">
-                <h3 style="border-bottom: 2px solid var(--tc-yellow); padding-bottom: 10px;">Cortes por Categoría</h3>
+            <div class="columna-cortes-scroll" style="background: transparent; padding: 0; max-height: 600px; overflow-y: auto;">
+                <h3 style="border-bottom: 2px solid var(--tc-yellow); padding-bottom: 10px; margin-bottom: 15px;">Carpetas de Análisis</h3>
                 <div id="cortes-container">Buscando datos del partido...</div>
             </div>
         </div>
@@ -60,7 +71,10 @@
                 
                 if (docSnap.exists()) {
                     const partido = docSnap.data();
-                    document.getElementById('titulo-partido').textContent = `vs ${partido.rival} - ${partido.fecha}`;
+                    const eq1 = partido.mi_equipo || 'Nuestro Equipo';
+                    const eq2 = partido.rival || 'Rival';
+                    
+                    document.getElementById('titulo-partido').textContent = `${eq1} vs ${eq2} - ${partido.fecha}`;
 
                     let rawId = partido.youtube_id;
                     if (rawId.includes('v=')) {
@@ -78,30 +92,75 @@
                     const container = document.getElementById('cortes-container');
                     container.innerHTML = '';
 
+                    const agrupado = {};
+
                     for (const [categoria, cortes] of Object.entries(partido.estadisticas)) {
-                        const grupo = document.createElement('div');
-                        grupo.className = 'cortes-group';
-                        grupo.innerHTML = `<h4 style="color: var(--tc-blue); margin-top: 15px;">${categoria} (${cortes.length})</h4>`;
+                        agrupado[categoria] = {};
                         
                         cortes.forEach((corte, index) => {
-                            const btn = document.createElement('button');
-                            btn.className = 'timestamp-btn';
+                            const numCorteOriginal = index + 1; 
                             
-                            let texto = `Corte ${index + 1}`;
                             if (corte.d && corte.d.length > 0) {
-                                texto += ` (${corte.d.join(', ')})`;
-                            }
-                            
-                            btn.textContent = texto;
-                            btn.onclick = () => {
-                                if (player && typeof player.seekTo === 'function') {
-                                    player.seekTo(corte.t, true);
+                                corte.d.forEach(descriptor => {
+                                    if (!agrupado[categoria][descriptor]) {
+                                        agrupado[categoria][descriptor] = [];
+                                    }
+                                    agrupado[categoria][descriptor].push({ ...corte, numCorteOriginal });
+                                });
+                            } else {
+                                if (!agrupado[categoria]['General']) {
+                                    agrupado[categoria]['General'] = [];
                                 }
-                            };
-                            grupo.appendChild(btn);
+                                agrupado[categoria]['General'].push({ ...corte, numCorteOriginal });
+                            }
                         });
-                        container.appendChild(grupo);
                     }
+
+                    const categoriasOrdenadas = Object.keys(agrupado).sort();
+
+                    categoriasOrdenadas.forEach(cat => {
+                        const catDetails = document.createElement('details');
+                        catDetails.className = 'cat-details';
+                        
+                        const catSummary = document.createElement('summary');
+                        catSummary.innerHTML = `📁 ${cat}`;
+                        catDetails.appendChild(catSummary);
+                        
+                        const subGrupos = agrupado[cat];
+                        const subGruposKeys = Object.keys(subGrupos).sort();
+                        
+                        subGruposKeys.forEach(desc => {
+                            const cortesGrupo = subGrupos[desc];
+                            
+                            const descDetails = document.createElement('details');
+                            descDetails.className = 'desc-details';
+                            
+                            const descSummary = document.createElement('summary');
+                            descSummary.innerHTML = `📂 ${desc} <span style="color:#888; font-size:0.85rem;">(${cortesGrupo.length} cortes)</span>`;
+                            descDetails.appendChild(descSummary);
+                            
+                            const divBotones = document.createElement('div');
+                            divBotones.className = 'botones-container';
+                            
+                            cortesGrupo.forEach(corte => {
+                                const btn = document.createElement('button');
+                                btn.className = 'timestamp-btn';
+                                btn.textContent = `▶ Corte ${corte.numCorteOriginal}`;
+                                
+                                btn.onclick = () => {
+                                    if (player && typeof player.seekTo === 'function') {
+                                        player.seekTo(corte.t, true);
+                                    }
+                                };
+                                divBotones.appendChild(btn);
+                            });
+                            
+                            descDetails.appendChild(divBotones);
+                            catDetails.appendChild(descDetails);
+                        });
+                        
+                        container.appendChild(catDetails);
+                    });
                 }
             } catch (error) {
                 console.error("Error al cargar el partido:", error);

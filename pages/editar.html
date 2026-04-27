@@ -8,7 +8,7 @@
 <body>
 
     <nav class="navbar">
-        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="carga.html">Cargar Partido</a></li>
@@ -26,18 +26,24 @@
                 
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
-                        <label><b>Nombre del Rival:</b></label>
+                        <label><b>Equipo 1 (Nuestra Columna):</b></label>
+                        <input type="text" id="input-mi-equipo" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label><b>Equipo 2 (Columna Rival):</b></label>
                         <input type="text" id="input-rival" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label><b>Torneo o Categoría:</b></label>
+                        <input type="text" id="input-torneo" required style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
                         <input type="date" id="input-fecha" required style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
-                </div>
-
-                <div>
-                    <label><b>Torneo o Categoría:</b></label>
-                    <input type="text" id="input-torneo" required style="width: 100%; padding: 10px; margin-top: 5px;">
                 </div>
 
                 <div>
@@ -79,6 +85,7 @@
                 const docSnap = await getDoc(doc(db, "partidos", idAEditar));
                 if (docSnap.exists()) {
                     const datos = docSnap.data();
+                    document.getElementById('input-mi-equipo').value = datos.mi_equipo || 'Nuestro Equipo';
                     document.getElementById('input-rival').value = datos.rival;
                     document.getElementById('input-fecha').value = datos.fecha;
                     document.getElementById('input-torneo').value = datos.torneo;
@@ -100,6 +107,7 @@
             const file = document.getElementById('input-xml').files[0];
             
             const datosActualizados = {
+                mi_equipo: document.getElementById('input-mi-equipo').value,
                 rival: document.getElementById('input-rival').value,
                 fecha: document.getElementById('input-fecha').value,
                 torneo: document.getElementById('input-torneo').value,
@@ -148,7 +156,6 @@
             btn.textContent = "Reintentar";
         }
 
-        // Corrección aplicada acá también
         function procesarLGM(jsonString) {
             const data = JSON.parse(jsonString);
             const eventos = data.Timeline; 
