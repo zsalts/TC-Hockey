@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Cargar Partido - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -23,37 +25,43 @@
 
         <div class="card-stat" style="display: block;">
             <form id="form-carga" style="display: flex; flex-direction: column; gap: 15px;">
-                
+
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
                         <label><b>Nombre del Rival:</b></label>
-                        <input type="text" id="input-rival" placeholder="Ej: Club Universitario" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <input type="text" id="input-rival" placeholder="Ej: Club Universitario" required
+                            style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
-                        <input type="date" id="input-fecha" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <input type="date" id="input-fecha" required
+                            style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
                 </div>
 
                 <div>
                     <label><b>Torneo o Categoría:</b></label>
-                    <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial Mar del Plata" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial Mar del Plata" required
+                        style="width: 100%; padding: 10px; margin-top: 5px;">
                 </div>
 
                 <div>
                     <label><b>ID de YouTube:</b></label>
-                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required
+                        style="width: 100%; padding: 10px; margin-top: 5px;">
                 </div>
 
-                <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
-                    <label><b>Archivo XML (Exportado de Timeline):</b></label><br>
-                    <input type="file" id="input-xml" accept=".xml" style="margin-top: 10px;">
+                <div
+                    style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
+                    <label><b>Archivo de LongoMatch (.lgm):</b></label><br>
+                    <input type="file" id="input-xml" accept=".lgm, .xml" required style="margin-top: 10px;">
                 </div>
 
-                <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
+                <button type="submit" id="btn-submit" class="btn-danger"
+                    style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
                     🚀 Guardar en Base de Datos
                 </button>
-                
+
                 <p id="mensaje-estado" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
             </form>
         </div>
@@ -66,9 +74,9 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const file = document.getElementById('input-xml').files[0];
 
             // Cambiamos el estado de la UI
@@ -90,7 +98,7 @@
                 if (file) {
                     // Caso A: El usuario subió un XML
                     const reader = new FileReader();
-                    reader.onload = async function(evento) {
+                    reader.onload = async function (evento) {
                         try {
                             const contenidoXML = evento.target.result;
                             partidoNuevo.estadisticas = procesarXML(contenidoXML);
@@ -102,7 +110,7 @@
                     reader.readAsText(file);
                 } else {
                     // Caso B: No hay XML, guardamos con estadísticas vacías
-                    partidoNuevo.estadisticas = {}; 
+                    partidoNuevo.estadisticas = {};
                     await guardarEnFirebase(partidoNuevo);
                 }
             } catch (error) {
@@ -115,7 +123,7 @@
             await addDoc(collection(db, "partidos"), datosPartido);
             mensaje.style.color = "green";
             mensaje.textContent = "¡Éxito! Redirigiendo al historial...";
-            
+
             setTimeout(() => {
                 window.location.href = "../index.html";
             }, 2000);
@@ -134,13 +142,13 @@
         function procesarXML(xmlString) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-            const eventos = xmlDoc.getElementsByTagName("evento"); 
-            const resultado = {}; 
+            const eventos = xmlDoc.getElementsByTagName("evento");
+            const resultado = {};
 
             for (let i = 0; i < eventos.length; i++) {
                 let categoria = eventos[i].getElementsByTagName("categoria")[0].textContent;
-                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent); 
-                
+                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent);
+
                 let nodosTags = eventos[i].getElementsByTagName("descriptor");
                 let tags = [];
                 for (let j = 0; j < nodosTags.length; j++) {
@@ -148,7 +156,7 @@
                 }
 
                 if (!resultado[categoria]) {
-                    resultado[categoria] = []; 
+                    resultado[categoria] = [];
                 }
                 resultado[categoria].push({ t: tiempo, d: tags });
             }
@@ -156,4 +164,5 @@
         }
     </script>
 </body>
+
 </html>
