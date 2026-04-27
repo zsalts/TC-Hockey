@@ -8,7 +8,7 @@
 <body>
 
     <nav class="navbar">
-        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="carga.html">Cargar Partido</a></li>
@@ -18,7 +18,7 @@
     <div class="container-dashboard">
         <div class="header-stats">
             <h2>Editar Partido</h2>
-            <p class="subtitle">Modificá los datos. Si no subís un nuevo XML, se mantendrán las estadísticas anteriores.</p>
+            <p class="subtitle">Modificá los datos. Si no subís un nuevo archivo, se mantendrán las estadísticas anteriores.</p>
         </div>
 
         <div class="card-stat" style="display: block;">
@@ -46,9 +46,9 @@
                 </div>
 
                 <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
-                    <label><b>Reemplazar XML (Opcional):</b></label><br>
+                    <label><b>Reemplazar Cortes (.lgm o .xml) (Opcional):</b></label><br>
                     <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Solo subí un archivo si querés sobrescribir los cortes anteriores.</p>
-                    <input type="file" id="input-xml" accept=".xml">
+                    <input type="file" id="input-xml" accept=".lgm, .xml">
                 </div>
 
                 <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer; background-color: var(--tc-blue);">
@@ -68,9 +68,8 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        let estadisticasViejas = {}; // Para no borrarlas si no sube XML nuevo
+        let estadisticasViejas = {}; 
 
-        // 1. Al cargar la página, traemos los datos actuales y los pegamos en los inputs
         async function cargarDatosParaEditar() {
             if (!idAEditar) {
                 window.location.href = "../index.html";
@@ -84,14 +83,13 @@
                     document.getElementById('input-fecha').value = datos.fecha;
                     document.getElementById('input-torneo').value = datos.torneo;
                     document.getElementById('input-youtube').value = datos.youtube_id;
-                    estadisticasViejas = datos.estadisticas; // Guardamos un respaldo
+                    estadisticasViejas = datos.estadisticas; 
                 }
             } catch (error) {
                 console.error("Error trayendo datos", error);
             }
         }
 
-        // 2. Al mandar el formulario, actualizamos la base de datos
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             btn.disabled = true;
@@ -101,7 +99,6 @@
 
             const file = document.getElementById('input-xml').files[0];
             
-            // Armamos los datos base a actualizar
             const datosActualizados = {
                 rival: document.getElementById('input-rival').value,
                 fecha: document.getElementById('input-fecha').value,
@@ -110,12 +107,16 @@
                 modificado_el: new Date()
             };
 
-            // Si el usuario subió un XML nuevo, lo procesamos
             if (file) {
                 const reader = new FileReader();
                 reader.onload = async function(evento) {
                     try {
-                        datosActualizados.estadisticas = procesarXML(evento.target.result);
+                        const contenidoArchivo = evento.target.result;
+                        if (contenidoArchivo.trim().startsWith("{")) {
+                            datosActualizados.estadisticas = procesarLGM(contenidoArchivo);
+                        } else {
+                            datosActualizados.estadisticas = procesarXML(contenidoArchivo);
+                        }
                         await subirActualizacion(datosActualizados);
                     } catch (error) {
                         mostrarError(error);
@@ -123,7 +124,6 @@
                 };
                 reader.readAsText(file);
             } else {
-                // Si no subió XML, actualizamos manteniendo las estadísticas viejas
                 try {
                     await subirActualizacion(datosActualizados);
                 } catch (error) {
@@ -146,6 +146,25 @@
             mensaje.textContent = "Error al actualizar.";
             btn.disabled = false;
             btn.textContent = "Reintentar";
+        }
+
+        function procesarLGM(jsonString) {
+            const data = JSON.parse(jsonString);
+            const eventos = data.Timeline; 
+            const resultado = {};
+            for (let i = 0; i < eventos.length; i++) {
+                let ev = eventos[i];
+                if (ev.$type !== "LongoMatch.Core.Store.TimelineEvent") continue;
+                let categoria = ev.Name.replace(/\s\d+$/, ""); 
+                let tiempo = ev.Start / 1000; 
+                let tags = [];
+                if (ev.Tags && ev.Tags.length > 0) {
+                    for (let j = 0; j < ev.Tags.length; j++) { tags.push(ev.Tags[j].Value); }
+                }
+                if (!resultado[categoria]) resultado[categoria] = [];
+                resultado[categoria].push({ t: tiempo, d: tags });
+            }
+            return resultado;
         }
 
         function procesarXML(xmlString) {

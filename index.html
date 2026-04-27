@@ -9,7 +9,7 @@
 <body>
 
     <nav class="navbar">
-        <img src="assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="index.html" class="active">Historial</a></li>
             <li><a href="pages/carga.html">Cargar Partido</a></li>
@@ -35,7 +35,6 @@
     </div>
 
     <script type="module">
-        // Agregamos doc y deleteDoc a la importación
         import { db, collection, getDocs, doc, deleteDoc } from './assets/js/firebase.js';
 
         let partidosGlobal = [];
@@ -97,13 +96,11 @@
                     </div>
                 `;
 
-                // Clic en la tarjeta para ir al video
                 card.onclick = () => {
                     sessionStorage.setItem('partidoSeleccionadoId', partido.id);
                     window.location.href = 'pages/video.html';
                 };
 
-                // Clic en Editar
                 const btnEditar = card.querySelector('.btn-editar');
                 btnEditar.onclick = (e) => {
                     e.stopPropagation();
@@ -111,22 +108,15 @@
                     window.location.href = 'pages/editar.html';
                 };
 
-                // Clic en Borrar
                 const btnBorrar = card.querySelector('.btn-borrar');
                 btnBorrar.onclick = async (e) => {
-                    e.stopPropagation(); // Evita que se abra el video
-                    
+                    e.stopPropagation(); 
                     const confirmacion = confirm(`¿Estás seguro que querés borrar el partido contra ${partido.rival}? Esta acción no se puede deshacer.`);
-                    
                     if (confirmacion) {
                         try {
-                            // Borramos el documento de Firebase
                             await deleteDoc(doc(db, "partidos", partido.id));
-                            
-                            // Lo sacamos de la lista global y volvemos a dibujar
                             partidosGlobal = partidosGlobal.filter(p => p.id !== partido.id);
                             renderizarPartidos(partidosGlobal);
-                            
                         } catch (error) {
                             console.error("Error al borrar:", error);
                             alert("Hubo un problema al intentar borrar el partido.");
@@ -138,7 +128,6 @@
             });
         }
 
-        // Buscador
         document.getElementById('buscador').addEventListener('input', (e) => {
             const textoBusqueda = e.target.value.toLowerCase();
             const partidosFiltrados = partidosGlobal.filter(p => 

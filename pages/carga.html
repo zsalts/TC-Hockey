@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <title>Cargar Partido - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-
 <body>
 
     <nav class="navbar">
-        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="carga.html" class="active">Cargar Partido</a></li>
@@ -20,48 +18,42 @@
     <div class="container-dashboard">
         <div class="header-stats">
             <h2>Subir Nuevo Partido</h2>
-            <p class="subtitle">Completá los datos y subí el XML para procesar los cortes</p>
+            <p class="subtitle">Completá los datos y subí el archivo de LongoMatch o Timeline</p>
         </div>
 
         <div class="card-stat" style="display: block;">
             <form id="form-carga" style="display: flex; flex-direction: column; gap: 15px;">
-
+                
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
                         <label><b>Nombre del Rival:</b></label>
-                        <input type="text" id="input-rival" placeholder="Ej: Club Universitario" required
-                            style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <input type="text" id="input-rival" placeholder="Ej: Club Universitario" required style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
-                        <input type="date" id="input-fecha" required
-                            style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <input type="date" id="input-fecha" required style="width: 100%; padding: 10px; margin-top: 5px;">
                     </div>
                 </div>
 
                 <div>
                     <label><b>Torneo o Categoría:</b></label>
-                    <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial Mar del Plata" required
-                        style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial Mar del Plata" required style="width: 100%; padding: 10px; margin-top: 5px;">
                 </div>
 
                 <div>
                     <label><b>ID de YouTube:</b></label>
-                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required
-                        style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required style="width: 100%; padding: 10px; margin-top: 5px;">
                 </div>
 
-                <div
-                    style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
-                    <label><b>Archivo de LongoMatch (.lgm):</b></label><br>
+                <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
+                    <label><b>Archivo de Análisis (.lgm o .xml):</b></label><br>
                     <input type="file" id="input-xml" accept=".lgm, .xml" required style="margin-top: 10px;">
                 </div>
 
-                <button type="submit" id="btn-submit" class="btn-danger"
-                    style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
+                <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
                     🚀 Guardar en Base de Datos
                 </button>
-
+                
                 <p id="mensaje-estado" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
             </form>
         </div>
@@ -74,95 +66,107 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        form.addEventListener('submit', async function (e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
-
+            
             const file = document.getElementById('input-xml').files[0];
+            if (!file) return;
 
-            // Cambiamos el estado de la UI
             btn.disabled = true;
             btn.textContent = "Procesando...";
             mensaje.style.color = "blue";
-            mensaje.textContent = "Guardando en la nube...";
+            mensaje.textContent = "Leyendo archivo y conectando con la nube...";
 
-            // Armamos la base del partido con los datos del formulario
-            const partidoNuevo = {
-                rival: document.getElementById('input-rival').value,
-                fecha: document.getElementById('input-fecha').value,
-                torneo: document.getElementById('input-torneo').value,
-                youtube_id: document.getElementById('input-youtube').value,
-                creado_el: new Date()
-            };
+            const reader = new FileReader();
+            reader.onload = async function(evento) {
+                try {
+                    const contenidoArchivo = evento.target.result;
+                    let estadisticas;
 
-            try {
-                if (file) {
-                    // Caso A: El usuario subió un XML
-                    const reader = new FileReader();
-                    reader.onload = async function (evento) {
-                        try {
-                            const contenidoXML = evento.target.result;
-                            partidoNuevo.estadisticas = procesarXML(contenidoXML);
-                            await guardarEnFirebase(partidoNuevo);
-                        } catch (error) {
-                            mostrarError(error);
-                        }
+                    // Si empieza con { es LongoMatch (JSON), sino Timeline (XML)
+                    if (contenidoArchivo.trim().startsWith("{")) {
+                        estadisticas = procesarLGM(contenidoArchivo);
+                    } else {
+                        estadisticas = procesarXML(contenidoArchivo);
+                    }
+
+                    const partidoNuevo = {
+                        rival: document.getElementById('input-rival').value,
+                        fecha: document.getElementById('input-fecha').value,
+                        torneo: document.getElementById('input-torneo').value,
+                        youtube_id: document.getElementById('input-youtube').value,
+                        estadisticas: estadisticas,
+                        creado_el: new Date()
                     };
-                    reader.readAsText(file);
-                } else {
-                    // Caso B: No hay XML, guardamos con estadísticas vacías
-                    partidoNuevo.estadisticas = {};
-                    await guardarEnFirebase(partidoNuevo);
+
+                    await addDoc(collection(db, "partidos"), partidoNuevo);
+                    
+                    mensaje.style.color = "green";
+                    mensaje.textContent = "¡Éxito! Redirigiendo al historial...";
+                    
+                    setTimeout(() => {
+                        window.location.href = "../index.html";
+                    }, 2000);
+
+                } catch (error) {
+                    console.error("Error al guardar: ", error);
+                    mensaje.style.color = "red";
+                    mensaje.textContent = "Error al procesar el archivo. Revisá la consola.";
+                    btn.disabled = false;
+                    btn.textContent = "Reintentar";
                 }
-            } catch (error) {
-                mostrarError(error);
-            }
+            };
+            reader.readAsText(file);
         });
 
-        // Función auxiliar para no repetir código al guardar
-        async function guardarEnFirebase(datosPartido) {
-            await addDoc(collection(db, "partidos"), datosPartido);
-            mensaje.style.color = "green";
-            mensaje.textContent = "¡Éxito! Redirigiendo al historial...";
-
-            setTimeout(() => {
-                window.location.href = "../index.html";
-            }, 2000);
-        }
-
-        // Función auxiliar para manejar errores visuales
-        function mostrarError(error) {
-            console.error("Error al guardar: ", error);
-            mensaje.style.color = "red";
-            mensaje.textContent = "Error al subir a Firebase.";
-            btn.disabled = false;
-            btn.textContent = "Reintentar";
-        }
-
-        // Función de parseo
-        function procesarXML(xmlString) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-            const eventos = xmlDoc.getElementsByTagName("evento");
+        // 1. Lógica para masticar LongoMatch (.lgm)
+        function procesarLGM(jsonString) {
+            const data = JSON.parse(jsonString);
+            const eventos = data.Timeline; 
             const resultado = {};
 
             for (let i = 0; i < eventos.length; i++) {
-                let categoria = eventos[i].getElementsByTagName("categoria")[0].textContent;
-                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent);
+                let ev = eventos[i];
+                if (ev.$type !== "LongoMatch.Core.Store.TimelineEvent") continue;
 
+                let categoria = ev.Name.replace(/\s\d+$/, ""); // Borra el " 001" del final
+                let tiempo = ev.Start / 1000; // Pasa de milisegundos a segundos
+
+                let tags = [];
+                if (ev.Tags && ev.Tags.length > 0) {
+                    for (let j = 0; j < ev.Tags.length; j++) {
+                        tags.push(ev.Tags[j].Value);
+                    }
+                }
+
+                if (!resultado[categoria]) resultado[categoria] = [];
+                resultado[categoria].push({ t: tiempo, d: tags });
+            }
+            return resultado;
+        }
+
+        // 2. Lógica para masticar Timeline (.xml)
+        function procesarXML(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+            const eventos = xmlDoc.getElementsByTagName("evento"); 
+            const resultado = {}; 
+
+            for (let i = 0; i < eventos.length; i++) {
+                let categoria = eventos[i].getElementsByTagName("categoria")[0].textContent;
+                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent); 
+                
                 let nodosTags = eventos[i].getElementsByTagName("descriptor");
                 let tags = [];
                 for (let j = 0; j < nodosTags.length; j++) {
                     tags.push(nodosTags[j].textContent);
                 }
 
-                if (!resultado[categoria]) {
-                    resultado[categoria] = [];
-                }
+                if (!resultado[categoria]) resultado[categoria] = []; 
                 resultado[categoria].push({ t: tiempo, d: tags });
             }
             return resultado;
         }
     </script>
 </body>
-
 </html>

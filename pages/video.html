@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <title>Video Análisis - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-
 <body>
 
     <nav class="navbar">
-        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="video.html" class="active">Video</a></li>
@@ -20,14 +18,13 @@
 
     <div class="container-dashboard">
         <h2 id="titulo-partido" style="color: var(--tc-blue);">Cargando video del partido...</h2>
-
+        
         <div class="layout-principal">
             <div class="columna-video">
                 <div id="player"></div>
             </div>
 
-            <div class="columna-cortes-scroll"
-                style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 600px; overflow-y: auto;">
+            <div class="columna-cortes-scroll" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 600px; overflow-y: auto;">
                 <h3 style="border-bottom: 2px solid var(--tc-yellow); padding-bottom: 10px;">Cortes por Categoría</h3>
                 <div id="cortes-container">Buscando datos del partido...</div>
             </div>
@@ -38,10 +35,9 @@
         import { db, doc, getDoc } from '../assets/js/firebase.js';
 
         let player;
-        let videoIdLimpio = ''; // Guardamos el ID acá para que YouTube lo lea cuando esté listo
+        let videoIdLimpio = ''; 
         const partidoId = sessionStorage.getItem('partidoSeleccionadoId');
 
-        // 1. Esta es la función que YouTube busca automáticamente al cargar
         window.onYouTubeIframeAPIReady = () => {
             if (videoIdLimpio) {
                 player = new YT.Player('player', {
@@ -61,27 +57,24 @@
 
             try {
                 const docSnap = await getDoc(doc(db, "partidos", partidoId));
-
+                
                 if (docSnap.exists()) {
                     const partido = docSnap.data();
                     document.getElementById('titulo-partido').textContent = `vs ${partido.rival} - ${partido.fecha}`;
 
-                    // --- MAGIA ACÁ: Limpiamos el link de YouTube por si pegaste la URL completa ---
                     let rawId = partido.youtube_id;
                     if (rawId.includes('v=')) {
                         videoIdLimpio = rawId.split('v=')[1].substring(0, 11);
                     } else if (rawId.includes('youtu.be/')) {
                         videoIdLimpio = rawId.split('youtu.be/')[1].substring(0, 11);
                     } else {
-                        videoIdLimpio = rawId; // Asume que ya pusiste solo el ID de 11 letras
+                        videoIdLimpio = rawId; 
                     }
 
-                    // --- Ahora sí, le decimos a YouTube que arranque ---
                     const tag = document.createElement('script');
                     tag.src = "https://www.youtube.com/iframe_api";
                     document.body.appendChild(tag);
 
-                    // --- Generamos los botones de los cortes ---
                     const container = document.getElementById('cortes-container');
                     container.innerHTML = '';
 
@@ -89,16 +82,16 @@
                         const grupo = document.createElement('div');
                         grupo.className = 'cortes-group';
                         grupo.innerHTML = `<h4 style="color: var(--tc-blue); margin-top: 15px;">${categoria} (${cortes.length})</h4>`;
-
+                        
                         cortes.forEach((corte, index) => {
                             const btn = document.createElement('button');
                             btn.className = 'timestamp-btn';
-
+                            
                             let texto = `Corte ${index + 1}`;
                             if (corte.d && corte.d.length > 0) {
                                 texto += ` (${corte.d.join(', ')})`;
                             }
-
+                            
                             btn.textContent = texto;
                             btn.onclick = () => {
                                 if (player && typeof player.seekTo === 'function') {
@@ -119,5 +112,4 @@
         cargarAnalisis();
     </script>
 </body>
-
 </html>
