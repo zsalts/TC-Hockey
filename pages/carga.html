@@ -8,7 +8,7 @@
 <body>
 
     <nav class="navbar">
-        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="carga.html" class="active">Cargar Partido</a></li>
@@ -119,7 +119,7 @@
             reader.readAsText(file);
         });
 
-        // 1. Lógica para masticar LongoMatch (.lgm)
+        // 1. Lógica para masticar LongoMatch (.lgm) con corrección
         function procesarLGM(jsonString) {
             const data = JSON.parse(jsonString);
             const eventos = data.Timeline; 
@@ -127,10 +127,12 @@
 
             for (let i = 0; i < eventos.length; i++) {
                 let ev = eventos[i];
-                if (ev.$type !== "LongoMatch.Core.Store.TimelineEvent") continue;
+                
+                // Usamos includes() para agarrar el evento sin problemas
+                if (!ev.$type || !ev.$type.includes("TimelineEvent")) continue;
 
-                let categoria = ev.Name.replace(/\s\d+$/, ""); // Borra el " 001" del final
-                let tiempo = ev.Start / 1000; // Pasa de milisegundos a segundos
+                let categoria = ev.Name.replace(/\s\d+$/, ""); 
+                let tiempo = ev.Start / 1000; 
 
                 let tags = [];
                 if (ev.Tags && ev.Tags.length > 0) {

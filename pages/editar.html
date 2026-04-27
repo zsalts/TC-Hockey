@@ -8,7 +8,7 @@
 <body>
 
     <nav class="navbar">
-        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <img src="../assets/img/logo.jpg" alt="Logo TC Hockey" class="logo">
         <ul class="nav-links">
             <li><a href="../index.html">Historial</a></li>
             <li><a href="carga.html">Cargar Partido</a></li>
@@ -148,13 +148,14 @@
             btn.textContent = "Reintentar";
         }
 
+        // Corrección aplicada acá también
         function procesarLGM(jsonString) {
             const data = JSON.parse(jsonString);
             const eventos = data.Timeline; 
             const resultado = {};
             for (let i = 0; i < eventos.length; i++) {
                 let ev = eventos[i];
-                if (ev.$type !== "LongoMatch.Core.Store.TimelineEvent") continue;
+                if (!ev.$type || !ev.$type.includes("TimelineEvent")) continue;
                 let categoria = ev.Name.replace(/\s\d+$/, ""); 
                 let tiempo = ev.Start / 1000; 
                 let tags = [];
