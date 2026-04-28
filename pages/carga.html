@@ -18,7 +18,7 @@
     <div class="container-dashboard">
         <div class="header-stats">
             <h2>Subir Nuevo Partido</h2>
-            <p class="subtitle">Completá los datos y subí el archivo de LongoMatch o Timeline</p>
+            <p class="subtitle">Completá los datos y subí el archivo de LongoMatch o Timeline (Opcional)</p>
         </div>
 
         <div class="card-stat" style="display: block;">
@@ -52,8 +52,8 @@
                 </div>
 
                 <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
-                    <label><b>Archivo de Análisis (.lgm o .xml):</b></label><br>
-                    <input type="file" id="input-xml" accept=".lgm, .xml" required style="margin-top: 10px;">
+                    <label><b>Archivo de Análisis (.lgm o .xml) (Opcional):</b></label><br>
+                    <input type="file" id="input-xml" accept=".lgm, .xml" style="margin-top: 10px;">
                 </div>
 
                 <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
@@ -72,57 +72,78 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const file = document.getElementById('input-xml').files[0];
-            if (!file) return;
 
             btn.disabled = true;
             btn.textContent = "Procesando...";
             mensaje.style.color = "blue";
-            mensaje.textContent = "Leyendo archivo y conectando con la nube...";
+            
+            // Mensaje dinámico según si hay archivo o no
+            mensaje.textContent = file ? "Leyendo archivo y conectando con la nube..." : "Guardando partido sin cortes...";
 
-            const reader = new FileReader();
-            reader.onload = async function(evento) {
+            // Armamos el objeto base con los datos del formulario
+            const partidoNuevo = {
+                mi_equipo: document.getElementById('input-mi-equipo').value,
+                rival: document.getElementById('input-rival').value,
+                fecha: document.getElementById('input-fecha').value,
+                torneo: document.getElementById('input-torneo').value,
+                youtube_id: document.getElementById('input-youtube').value,
+                creado_el: new Date()
+            };
+
+            // Función auxiliar para subir a Firebase
+            const guardarEnBaseDeDatos = async (datos) => {
                 try {
-                    const contenidoArchivo = evento.target.result;
-                    let estadisticas;
-
-                    if (contenidoArchivo.trim().startsWith("{")) {
-                        estadisticas = procesarLGM(contenidoArchivo);
-                    } else {
-                        estadisticas = procesarXML(contenidoArchivo);
-                    }
-
-                    const partidoNuevo = {
-                        mi_equipo: document.getElementById('input-mi-equipo').value,
-                        rival: document.getElementById('input-rival').value,
-                        fecha: document.getElementById('input-fecha').value,
-                        torneo: document.getElementById('input-torneo').value,
-                        youtube_id: document.getElementById('input-youtube').value,
-                        estadisticas: estadisticas,
-                        creado_el: new Date()
-                    };
-
-                    await addDoc(collection(db, "partidos"), partidoNuevo);
-                    
+                    await addDoc(collection(db, "partidos"), datos);
                     mensaje.style.color = "green";
                     mensaje.textContent = "¡Éxito! Redirigiendo al historial...";
-                    
                     setTimeout(() => {
                         window.location.href = "../index.html";
                     }, 2000);
-
                 } catch (error) {
                     console.error("Error al guardar: ", error);
                     mensaje.style.color = "red";
-                    mensaje.textContent = "Error al procesar el archivo. Revisá la consola.";
+                    mensaje.textContent = "Error al guardar en la base de datos. Revisá la consola.";
                     btn.disabled = false;
                     btn.textContent = "Reintentar";
                 }
             };
-            reader.readAsText(file);
+
+            // Evaluamos si hay archivo para procesar
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async function(evento) {
+                    try {
+                        const contenidoArchivo = evento.target.result;
+                        let estadisticas;
+
+                        if (contenidoArchivo.trim().startsWith("{")) {
+                            estadisticas = procesarLGM(contenidoArchivo);
+                        } else {
+                            estadisticas = procesarXML(contenidoArchivo);
+                        }
+
+                        // Agregamos las estadísticas al objeto y guardamos
+                        partidoNuevo.estadisticas = estadisticas;
+                        await guardarEnBaseDeDatos(partidoNuevo);
+
+                    } catch (error) {
+                        console.error("Error al procesar archivo: ", error);
+                        mensaje.style.color = "red";
+                        mensaje.textContent = "Error al procesar el archivo de cortes. Revisá la consola.";
+                        btn.disabled = false;
+                        btn.textContent = "Reintentar";
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                // Si NO hay archivo, mandamos las estadísticas como un objeto vacío
+                partidoNuevo.estadisticas = {}; 
+                await guardarEnBaseDeDatos(partidoNuevo);
+            }
         });
 
         function procesarLGM(jsonString) {
