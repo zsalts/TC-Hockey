@@ -27,11 +27,39 @@
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
                         <label><b>Equipo 1 (Nuestra Columna):</b></label>
-                        <input type="text" id="input-mi-equipo" placeholder="Ej: Mi Equipo" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <select id="input-mi-equipo" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                            <option value="" disabled selected>Seleccioná un equipo</option>
+                            <option value="ONCE UNIDOS">ONCE UNIDOS</option>
+                            <option value="TC">TC</option>
+                            <option value="IDRA">IDRA</option>
+                            <option value="BANCO PROVINCIA">BANCO PROVINCIA</option>
+                            <option value="UNIVERSITARIO">UNIVERSITARIO</option>
+                            <option value="SPORTING">SPORTING</option>
+                            <option value="MDPC">MDPC</option>
+                            <option value="BIGUA">BIGUA</option>
+                            <option value="NAUTICO">NAUTICO</option>
+                            <option value="DEL VALLE">DEL VALLE</option>
+                            <option value="IAE">IAE</option>
+                            <option value="CUDS">CUDS</option>
+                        </select>
                     </div>
                     <div style="flex: 1;">
                         <label><b>Equipo 2 (Columna Rival):</b></label>
-                        <input type="text" id="input-rival" placeholder="Ej: Mar del Plata Club" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <select id="input-rival" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                            <option value="" disabled selected>Seleccioná un equipo</option>
+                            <option value="ONCE UNIDOS">ONCE UNIDOS</option>
+                            <option value="TC">TC</option>
+                            <option value="IDRA">IDRA</option>
+                            <option value="BANCO PROVINCIA">BANCO PROVINCIA</option>
+                            <option value="UNIVERSITARIO">UNIVERSITARIO</option>
+                            <option value="SPORTING">SPORTING</option>
+                            <option value="MDPC">MDPC</option>
+                            <option value="BIGUA">BIGUA</option>
+                            <option value="NAUTICO">NAUTICO</option>
+                            <option value="DEL VALLE">DEL VALLE</option>
+                            <option value="IAE">IAE</option>
+                            <option value="CUDS">CUDS</option>
+                        </select>
                     </div>
                 </div>
 
@@ -81,10 +109,8 @@
             btn.textContent = "Procesando...";
             mensaje.style.color = "blue";
             
-            // Mensaje dinámico según si hay archivo o no
             mensaje.textContent = file ? "Leyendo archivo y conectando con la nube..." : "Guardando partido sin cortes...";
 
-            // Armamos el objeto base con los datos del formulario
             const partidoNuevo = {
                 mi_equipo: document.getElementById('input-mi-equipo').value,
                 rival: document.getElementById('input-rival').value,
@@ -94,7 +120,6 @@
                 creado_el: new Date()
             };
 
-            // Función auxiliar para subir a Firebase
             const guardarEnBaseDeDatos = async (datos) => {
                 try {
                     await addDoc(collection(db, "partidos"), datos);
@@ -112,7 +137,6 @@
                 }
             };
 
-            // Evaluamos si hay archivo para procesar
             if (file) {
                 const reader = new FileReader();
                 reader.onload = async function(evento) {
@@ -126,7 +150,6 @@
                             estadisticas = procesarXML(contenidoArchivo);
                         }
 
-                        // Agregamos las estadísticas al objeto y guardamos
                         partidoNuevo.estadisticas = estadisticas;
                         await guardarEnBaseDeDatos(partidoNuevo);
 
@@ -140,7 +163,6 @@
                 };
                 reader.readAsText(file);
             } else {
-                // Si NO hay archivo, mandamos las estadísticas como un objeto vacío
                 partidoNuevo.estadisticas = {}; 
                 await guardarEnBaseDeDatos(partidoNuevo);
             }

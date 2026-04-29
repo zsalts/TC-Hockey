@@ -27,11 +27,39 @@
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
                         <label><b>Equipo 1 (Nuestra Columna):</b></label>
-                        <input type="text" id="input-mi-equipo" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <select id="input-mi-equipo" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                            <option value="" disabled selected>Seleccioná un equipo</option>
+                            <option value="ONCE UNIDOS">ONCE UNIDOS</option>
+                            <option value="TC">TC</option>
+                            <option value="IDRA">IDRA</option>
+                            <option value="BANCO PROVINCIA">BANCO PROVINCIA</option>
+                            <option value="UNIVERSITARIO">UNIVERSITARIO</option>
+                            <option value="SPORTING">SPORTING</option>
+                            <option value="MDPC">MDPC</option>
+                            <option value="BIGUA">BIGUA</option>
+                            <option value="NAUTICO">NAUTICO</option>
+                            <option value="DEL VALLE">DEL VALLE</option>
+                            <option value="IAE">IAE</option>
+                            <option value="CUDS">CUDS</option>
+                        </select>
                     </div>
                     <div style="flex: 1;">
                         <label><b>Equipo 2 (Columna Rival):</b></label>
-                        <input type="text" id="input-rival" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <select id="input-rival" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                            <option value="" disabled selected>Seleccioná un equipo</option>
+                            <option value="ONCE UNIDOS">ONCE UNIDOS</option>
+                            <option value="TC">TC</option>
+                            <option value="IDRA">IDRA</option>
+                            <option value="BANCO PROVINCIA">BANCO PROVINCIA</option>
+                            <option value="UNIVERSITARIO">UNIVERSITARIO</option>
+                            <option value="SPORTING">SPORTING</option>
+                            <option value="MDPC">MDPC</option>
+                            <option value="BIGUA">BIGUA</option>
+                            <option value="NAUTICO">NAUTICO</option>
+                            <option value="DEL VALLE">DEL VALLE</option>
+                            <option value="IAE">IAE</option>
+                            <option value="CUDS">CUDS</option>
+                        </select>
                     </div>
                 </div>
 
@@ -85,7 +113,9 @@
                 const docSnap = await getDoc(doc(db, "partidos", idAEditar));
                 if (docSnap.exists()) {
                     const datos = docSnap.data();
-                    document.getElementById('input-mi-equipo').value = datos.mi_equipo || 'Nuestro Equipo';
+                    
+                    // Asignamos los valores al select. Si el equipo anterior no está en la lista, el select quedará vacío pidiendo que elijas de nuevo
+                    document.getElementById('input-mi-equipo').value = datos.mi_equipo;
                     document.getElementById('input-rival').value = datos.rival;
                     document.getElementById('input-fecha').value = datos.fecha;
                     document.getElementById('input-torneo').value = datos.torneo;
