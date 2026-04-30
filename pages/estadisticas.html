@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Estadísticas - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
-<style>
+    <style>
         /* Ajuste de ancho de pantalla */
         .container-dashboard {
             width: 95% !important; 
@@ -22,7 +22,7 @@
             .stat-card:last-child { width: 100% !important; }
         }
 
-        /* ACÁ ESTÁ EL CAMBIO: Un gris más notorio para el fondo de las columnas */
+        /* Fondo de las columnas */
         .columna-equipo { 
             flex: 1; 
             display: grid; 
@@ -31,8 +31,8 @@
             align-content: start;
             padding: 15px; 
             border-radius: 12px;
-            background-color: #dee2e6; /* Gris más oscuro para que contraste bien */
-            border: 1px solid #ced4da; /* Un borde sutil para enmarcarlo */
+            background-color: #dee2e6;
+            border: 1px solid #ced4da;
         }
 
         /* Títulos con el color de los equipos */
@@ -60,7 +60,7 @@
             border-radius: 6px;
         }
 
-        /* Las tablitas en BLANCO puro para contrastar con el nuevo gris */
+        /* Tarjetas de estadísticas */
         .stat-card {
             background: white; 
             padding: 8px 12px; border-radius: 6px;
@@ -211,12 +211,15 @@
                         cortes.forEach(c => {
                             let tagsLimpios = c.d ? c.d.map(t => limpiar(t)) : [];
 
+                            // LOGICA CORREGIDA PARA GOLES Y BLOQUEOS
                             if (tagsLimpios.includes("gol")) {
                                 let esBotonCC = cat.includes("cortos");
+                                let golEsDelRival = esDeRival || cat.includes("bloqueo");
+                                
                                 if (esBotonCC) {
-                                    if (esDeRival) golesContraCC++; else golesCC++;
+                                    if (golEsDelRival) golesContraCC++; else golesCC++;
                                 } else {
-                                    if (esDeRival) golesContraJugada++; else golesJugada++;
+                                    if (golEsDelRival) golesContraJugada++; else golesJugada++;
                                 }
                             }
 
@@ -389,7 +392,7 @@
                                     <span class="stat-total dark">${ingresosRivalesTotal}</span>
                                 </div>
                                 <div class="stat-row ${win(ingresosRivalesTipo['pase'], ingresosNuestrosTipo['pase'])}"><span class="label">Pase</span><span class="value">${ingresosRivalesTipo['pase']}</span></div>
-                                <div class="stat-row ${win(ingresosRivalesTipo['penetracion'], ingresosNuestrosTipo['penetracion'])}"><span class="label">Penetración</span><span class="value">${ingresosRivalesTipo['penetracion']}</span></div>
+                                <div class="stat-row ${win(ingresosRivalesTipo['penetracion'], ingresosNuestrosTipo['penetracion'])}"><span class="label">Penetración</span><span class="value">${ingresosNuestrosTipo['penetracion']}</span></div>
                                 <div class="stat-row ${win(ingresosRivalesTipo['flick'], ingresosNuestrosTipo['flick'])}"><span class="label">Flick</span><span class="value">${ingresosRivalesTipo['flick']}</span></div>
                             </div>
 
