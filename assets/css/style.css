@@ -4,124 +4,134 @@
     --tc-red: #c9242b;      
     --tc-yellow: #f2d63d;   
     --tc-white: #ffffff;    
-    --bg-color: #f4f7f6; /* Fondo gris muy suave para dar contraste a las tarjetas */   
+    --bg-color: #f4f7f6;
 }
+
+* { box-sizing: border-box; }
 
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    padding: 20px; 
+    padding: 10px; /* Padding reducido para celular */
     background-color: var(--bg-color);
     color: #333;
     margin: 0;
 }
 
-/* --- Menú de Navegación --- */
+/* --- Menú de Navegación Responsive --- */
 .navbar {
     background-color: var(--tc-blue);
     display: flex;
+    flex-direction: column; /* Apilado en móvil */
     align-items: center;
-    padding: 10px 20px;
-    margin-bottom: 30px;
+    padding: 15px;
+    margin-bottom: 20px;
     border-radius: 8px;
+    gap: 15px;
     box-shadow: 0 4px 12px rgba(28, 44, 84, 0.2);
 }
-.logo { height: 50px; margin-right: 20px; border-radius: 4px; }
-.nav-links { list-style: none; padding: 0; margin: 0; display: flex; gap: 15px; }
-.nav-links a { color: var(--tc-white); text-decoration: none; font-weight: bold; padding: 8px 15px; border-radius: 4px; transition: 0.3s; }
-.nav-links a:hover, .nav-links a.active { background-color: var(--tc-red); }
 
-/* --- Contenedor Principal Dashboard --- */
-.container-dashboard {
-    max-width: 1000px;
-    margin: 0 auto;
+.logo { height: 45px; border-radius: 4px; }
+
+.nav-links { 
+    list-style: none; padding: 0; margin: 0; 
+    display: flex; gap: 10px; width: 100%; 
+    justify-content: center; flex-wrap: wrap;
 }
 
+.nav-links a { 
+    color: var(--tc-white); text-decoration: none; font-weight: bold; 
+    padding: 8px 12px; border-radius: 4px; font-size: 0.9rem;
+    background: rgba(255,255,255,0.1); transition: 0.3s;
+}
+
+.nav-links a.active, .nav-links a:hover { background-color: var(--tc-red); }
+
+/* --- Contenedor Principal --- */
+.container-dashboard { width: 100%; max-width: 1000px; margin: 0 auto; }
+
+/* --- Encabezados --- */
 .header-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 15px;
+    display: flex; flex-direction: column; gap: 15px;
+    margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 15px;
 }
-.header-stats h2 { margin: 0; color: var(--tc-blue); font-size: 2rem; }
-.subtitle { margin: 5px 0 0 0; color: #666; }
 
+.header-stats-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.header-stats h2 { margin: 0; color: var(--tc-blue); font-size: 1.5rem; }
+.subtitle { margin: 5px 0 0 0; color: #666; font-size: 0.9rem; }
+
+/* --- Botones y Formularios --- */
 .btn-danger {
-    background-color: var(--tc-red);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
+    background-color: var(--tc-red); color: white; border: none;
+    padding: 10px 15px; border-radius: 6px; font-weight: bold;
+    cursor: pointer; transition: background 0.2s; 
+    text-decoration: none; display: inline-block; text-align: center;
 }
 .btn-danger:hover { background-color: #a3191f; }
 
-/* --- Tipografía y Títulos de Sección --- */
-.section-title {
-    color: var(--tc-blue);
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+.form-group-row { display: flex; flex-direction: column; gap: 15px; } /* Stack en móvil */
+input, select, button { width: 100%; font-size: 16px !important; box-sizing: border-box;} /* 16px evita zoom en iOS */
 
-/* --- Tarjetas de Estadísticas Modernas --- */
+/* --- Historial Grilla --- */
+.grid-partidos { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px; }
+
 .card-stat {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: white; border-radius: 10px; padding: 15px;
+    display: flex; flex-direction: column;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    border-left: 4px solid var(--tc-blue); /* Detalle de color al borde */
-    margin-bottom: 15px;
-    transition: transform 0.2s;
+    border-left: 4px solid var(--tc-blue);
+    cursor: pointer; transition: transform 0.2s;
 }
-.card-stat:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
+.card-stat:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
-.stat-title {
-    font-weight: 600;
-    color: #555;
-    font-size: 1.1rem;
-}
+/* --- Layout Video --- */
+.layout-principal { display: flex; flex-direction: column; gap: 20px; }
+.columna-video { width: 100%; }
+.columna-cortes-scroll { width: 100%; max-height: none; overflow-y: visible; }
 
-.stat-value {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--tc-blue);
+.timestamp-btn {
+    background: #f0f2f5; border: 1px solid #ccc; padding: 12px;
+    border-radius: 6px; cursor: pointer; font-size: 0.9rem;
+    flex: 1 1 45%; /* Dos botones por fila en celular */
 }
 
-/* --- Variantes de Tarjetas (Goles y Ataques resaltan más) --- */
-.card-stat.principal {
-    background: var(--tc-blue);
-    border-left: none;
-    flex-direction: column; /* Apila título y número */
-    align-items: flex-start;
+/* --- Layout Estadísticas --- */
+.comparativa-container { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-top: 10px; }
+.columna-equipo { 
+    flex: 1; display: grid; grid-template-columns: 1fr; gap: 10px; 
+    padding: 15px; border-radius: 12px; background: #dee2e6; border: 1px solid #ced4da; align-content: start;
 }
-.card-stat.principal .stat-title { color: white; opacity: 0.8; font-size: 1rem;}
-.card-stat.principal .stat-value { font-size: 3.5rem; line-height: 1.1; }
-
-/* Colores de texto para las métricas principales */
-.text-yellow { color: var(--tc-yellow) !important; }
-.text-red { color: var(--tc-red) !important; }
-
-/* --- Grillas para acomodar el layout --- */
-.grid-resumen {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 30px;
+.stat-card-inner {
+    background: white; padding: 8px 12px; border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; border-left: 4px solid #ccc;
 }
+.stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding: 2px 5px; border-radius: 4px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 5px; border-bottom: 1px dashed #e0e0e0; font-size: 0.75rem; }
+.stat-row:last-child { border-bottom: none; }
+.winner-bg { background-color: rgba(0, 0, 0, 0.04) !important; border-bottom: none; }
 
-.grid-detalles {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+/* ========================================= */
+/* MEDIA QUERIES (PC y Tablets)              */
+/* ========================================= */
+@media (min-width: 768px) {
+    body { padding: 20px; }
+    
+    .navbar { flex-direction: row; justify-content: flex-start; }
+    .nav-links { width: auto; justify-content: flex-start;}
+    
+    .header-stats { flex-direction: row; justify-content: space-between; align-items: center; }
+    .header-stats h2 { font-size: 2rem; }
+    .header-stats-top { width: auto; }
+    
+    .form-group-row { flex-direction: row; }
+    
+    .grid-partidos { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    
+    .layout-principal { flex-direction: row; align-items: flex-start; }
+    .columna-video { flex: 2; position: sticky; top: 20px; }
+    .columna-cortes-scroll { flex: 1; max-height: 600px; overflow-y: auto; }
+    .timestamp-btn { flex: 1 1 auto; }
+
+    .comparativa-container { flex-direction: row; }
+    .columna-equipo { grid-template-columns: repeat(2, 1fr); }
+    .stat-card-inner:last-child { grid-column: 1 / -1; justify-self: center; width: calc(50% - 5px); }
 }

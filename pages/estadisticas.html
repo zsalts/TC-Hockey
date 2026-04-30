@@ -7,32 +7,42 @@
     <style>
         /* Ajuste de ancho de pantalla */
         .container-dashboard {
-            width: 95% !important; 
+            width: 100% !important; 
             max-width: 1600px !important; 
             margin: 0 auto !important; 
-            padding: 10px 0 !important;
+            padding: 10px !important;
             box-sizing: border-box;
         }
 
-        .comparativa-container { display: flex; gap: 15px; margin-top: 10px; width: 100%; }
-        
-        @media (max-width: 768px) { 
-            .comparativa-container { flex-direction: column; } 
-            .columna-equipo { grid-template-columns: 1fr !important; }
-            .stat-card:last-child { width: 100% !important; }
+        /* --- CLAVE PARA RESPONSIVE EN ESTA VISTA --- */
+        .comparativa-container { 
+            display: flex; 
+            flex-direction: column; /* Celular por defecto: apilado */
+            gap: 15px; 
+            margin-top: 10px; 
+            width: 100%; 
         }
 
-        /* Fondo de las columnas */
         .columna-equipo { 
             flex: 1; 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
+            grid-template-columns: 1fr; /* 1 tarjeta por fila en celular */
             gap: 10px; 
             align-content: start;
             padding: 15px; 
             border-radius: 12px;
             background-color: #dee2e6;
             border: 1px solid #ced4da;
+        }
+        
+        @media (min-width: 768px) { 
+            .comparativa-container { flex-direction: row; } /* PC: lado a lado */
+            .columna-equipo { grid-template-columns: repeat(2, 1fr); } /* PC: 2 tarjetas por fila */
+            .stat-card:last-child {
+                grid-column: 1 / -1;
+                justify-self: center;
+                width: calc(50% - 5px); 
+            }
         }
 
         /* Títulos con el color de los equipos */
@@ -72,13 +82,6 @@
 
         .card-nuestro { border-left-color: var(--tc-blue); }
         .card-rival { border-left-color: #343a40; }
-
-        /* Centrar la última tarjeta (Recuperaciones) en el medio exacto */
-        .stat-card:last-child {
-            grid-column: 1 / -1;
-            justify-self: center;
-            width: calc(50% - 5px); 
-        }
 
         /* Estilos internos de las tablitas */
         .stat-header {
@@ -242,7 +245,7 @@
                             if (cat === "tiro arco contra") {
                                 if (tagsLimpios.includes("gol")) tirosRivalesResultado['gol']++;
                                 else if (tagsLimpios.includes("atajado") || tagsLimpios.includes("atajada")) tirosRivalesResultado['atajada']++;
-                                else if (tagsLimpios.includes("afuera") || tagsLimpios.includes("error")) tirosRivalesResultado['afuera']++;
+                                else if (tagsLimpios.includes("afuera") || tagsRivalesResultado['error']) tirosRivalesResultado['afuera']++;
                             }
 
                             if (cat === "ingresos al area") {

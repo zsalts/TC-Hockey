@@ -2,18 +2,117 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Análisis - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        .cat-details { margin-bottom: 10px; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .cat-details > summary { background: var(--tc-blue); color: white; padding: 15px; font-weight: bold; cursor: pointer; list-style: none; font-size: 1.1rem; }
+        /* --- LAYOUT SIEMPRE EN COLUMNA (Video arriba, cortes abajo) --- */
+        .layout-principal {
+            display: flex;
+            flex-direction: column; 
+            gap: 25px;
+            width: 100%;
+        }
+
+        /* --- REPRODUCTOR (16:9 Automático) --- */
+        .columna-video {
+            width: 100%;
+        }
+        
+        .video-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Fuerza el formato panorámico */
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(28, 44, 84, 0.15);
+        }
+
+        .video-wrapper iframe {
+            width: 100% !important;
+            height: 100% !important;
+            border: none;
+        }
+
+        /* --- CARPETAS Y BOTONES --- */
+        .columna-cortes-scroll {
+            width: 100%;
+            max-height: 600px; /* Vuelve el límite de altura original */
+            overflow-y: auto; /* Vuelve el scroll original */
+            padding-right: 10px;
+        }
+
+        .cat-details {
+            background: #ffffff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+        
+        .cat-details > summary {
+            background: var(--tc-blue, #1c2c54);
+            color: #ffffff;
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            list-style: none;
+            border-radius: 10px;
+        }
+
         .cat-details > summary::-webkit-details-marker { display: none; }
         
-        .desc-details { margin: 10px 15px; border-left: 3px solid var(--tc-yellow); padding-left: 15px; background: #f9f9f9; border-radius: 0 6px 6px 0;}
-        .desc-details > summary { color: #333; font-weight: bold; cursor: pointer; padding: 10px 0; list-style: none; border-bottom: 1px solid #eee; }
+        .cat-details[open] > summary {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .desc-details {
+            margin: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid var(--tc-red, #c9242b);
+            border-radius: 6px;
+            padding: 5px 15px;
+        }
+        
+        .desc-details > summary {
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 12px 0;
+            list-style: none;
+            border-bottom: 1px dashed #ccc;
+        }
+        
         .desc-details > summary::-webkit-details-marker { display: none; }
         
-        .botones-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0; }
+        .botones-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            padding: 15px 0;
+        }
+        
+        .timestamp-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: var(--tc-blue, #1c2c54);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .timestamp-btn:hover {
+            background: var(--tc-blue, #1c2c54);
+            color: #ffffff;
+            border-color: var(--tc-blue, #1c2c54);
+        }
     </style>
 </head>
 <body>
@@ -28,20 +127,29 @@
     </nav>
 
     <div class="container-dashboard">
-        <h2 id="titulo-partido" style="color: var(--tc-blue);">Cargando video del partido...</h2>
+        <h2 id="titulo-partido" style="color: var(--tc-blue); margin-bottom: 20px; font-size: 1.6rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">Cargando video...</h2>
         
         <div class="layout-principal">
+            
+            <!-- REPRODUCTOR DE VIDEO (SIEMPRE ARRIBA) -->
             <div class="columna-video">
-                <div id="player"></div>
+                <div class="video-wrapper">
+                    <div id="player"></div>
+                </div>
             </div>
 
-            <div class="columna-cortes-scroll" style="background: transparent; padding: 0; max-height: 600px; overflow-y: auto;">
-                <h3 style="border-bottom: 2px solid var(--tc-yellow); padding-bottom: 10px; margin-bottom: 15px;">Carpetas de Análisis</h3>
-                <div id="cortes-container">Buscando datos del partido...</div>
+            <!-- CARPETAS DE ANÁLISIS (SIEMPRE ABAJO) -->
+            <div class="columna-cortes-scroll">
+                <h3 style="margin-top: 0; color: var(--tc-blue); font-size: 1.2rem;">📊 Cortes del Partido</h3>
+                <div id="cortes-container">
+                    <p style="color: #666;">Buscando datos...</p>
+                </div>
             </div>
+
         </div>
     </div>
 
+    <!-- EL JAVASCRIPT INTACTO -->
     <script type="module">
         import { db, doc, getDoc } from '../assets/js/firebase.js';
 

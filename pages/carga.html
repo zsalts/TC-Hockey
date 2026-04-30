@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cargar Partido - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
@@ -16,18 +17,20 @@
     </nav>
 
     <div class="container-dashboard">
-        <div class="header-stats">
-            <h2>Subir Nuevo Partido</h2>
-            <p class="subtitle">Completá los datos y subí el archivo de LongoMatch o Timeline (Opcional)</p>
+        <div class="header-stats" style="border: none;">
+            <div>
+                <h2>Subir Nuevo Partido</h2>
+                <p class="subtitle">Completá los datos y subí el archivo de LongoMatch o Timeline (Opcional)</p>
+            </div>
         </div>
 
         <div class="card-stat" style="display: block;">
             <form id="form-carga" style="display: flex; flex-direction: column; gap: 15px;">
                 
-                <div style="display: flex; gap: 15px;">
+                <div class="form-group-row">
                     <div style="flex: 1;">
                         <label><b>Equipo 1 (Nuestra Columna):</b></label>
-                        <select id="input-mi-equipo" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <select id="input-mi-equipo" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
                             <option value="" disabled selected>Seleccioná un equipo</option>
                             <option value="ONCE UNIDOS">ONCE UNIDOS</option>
                             <option value="TC">TC</option>
@@ -45,7 +48,7 @@
                     </div>
                     <div style="flex: 1;">
                         <label><b>Equipo 2 (Columna Rival):</b></label>
-                        <select id="input-rival" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <select id="input-rival" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
                             <option value="" disabled selected>Seleccioná un equipo</option>
                             <option value="ONCE UNIDOS">ONCE UNIDOS</option>
                             <option value="TC">TC</option>
@@ -63,20 +66,20 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 15px;">
+                <div class="form-group-row">
                     <div style="flex: 1;">
                         <label><b>Torneo o Categoría:</b></label>
-                        <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
-                        <input type="date" id="input-fecha" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <input type="date" id="input-fecha" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                 </div>
 
                 <div>
                     <label><b>ID de YouTube:</b></label>
-                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
 
                 <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
@@ -84,7 +87,7 @@
                     <input type="file" id="input-xml" accept=".lgm, .xml" style="margin-top: 10px;">
                 </div>
 
-                <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; font-size: 1.1rem; padding: 15px; cursor: pointer;">
+                <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; padding: 15px;">
                     🚀 Guardar en Base de Datos
                 </button>
                 
