@@ -189,7 +189,9 @@
                         const cat = limpiar(categoriaReal);
                         const cantCortes = cortes.length;
 
-                        const esDeRival = cat.includes("contra") || cat.includes("rival") || cat.includes("perdida");
+                        // ACÁ ESTÁ EL CAMBIO: Se agregó "bloqueo" a la lista del rival. 
+                        // Cualquier otra cosa (como "salidas") cae automáticamente como acción tuya.
+                        const esDeRival = cat.includes("contra") || cat.includes("rival") || cat.includes("perdida") || cat.includes("bloqueo");
                         
                         if (esDeRival) accionesRivales += cantCortes;
                         else accionesNuestras += cantCortes;
@@ -211,15 +213,15 @@
                         cortes.forEach(c => {
                             let tagsLimpios = c.d ? c.d.map(t => limpiar(t)) : [];
 
-                            // LOGICA CORREGIDA PARA GOLES Y BLOQUEOS
                             if (tagsLimpios.includes("gol")) {
                                 let esBotonCC = cat.includes("cortos");
-                                let golEsDelRival = esDeRival || cat.includes("bloqueo");
                                 
+                                // Como "bloqueo" ya es verdadero en esDeRival, no hace falta forzarlo acá,
+                                // pero se evalúa directamente para los goles
                                 if (esBotonCC) {
-                                    if (golEsDelRival) golesContraCC++; else golesCC++;
+                                    if (esDeRival) golesContraCC++; else golesCC++;
                                 } else {
-                                    if (golEsDelRival) golesContraJugada++; else golesJugada++;
+                                    if (esDeRival) golesContraJugada++; else golesJugada++;
                                 }
                             }
 
