@@ -3,29 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Análisis - TC Hockey</title>
+    <title>Video Análisis - Timeline Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        /* --- LAYOUT SIEMPRE EN COLUMNA (Video arriba, cortes abajo) --- */
+        /* --- ESTRUCTURA GENERAL --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+        }
+
+        .container-dashboard {
+            max-width: 1400px; 
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* --- TÍTULO --- */
+        #titulo-partido {
+            color: var(--tc-blue); 
+            margin-top: 0;
+            margin-bottom: 20px; 
+            font-size: 1.5rem; 
+            border-bottom: 2px solid #e0e0e0; 
+            padding-bottom: 10px; 
+        }
+
+        /* --- MAGIA: FLEXBOX PARA IGUALAR ALTURAS EXACTAS --- */
         .layout-principal {
             display: flex;
-            flex-direction: column; 
+            flex-direction: row; 
             gap: 25px;
+            align-items: stretch; /* Obliga a la columna derecha a ser igual de alta que la izquierda */
             width: 100%;
         }
 
-        /* --- REPRODUCTOR (16:9 Automático) --- */
-        .columna-video {
-            width: 100%;
+        /* --- COLUMNA IZQUIERDA (Dicta la altura total) --- */
+        .columna-izquierda {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        
+
         .video-wrapper {
             width: 100%;
-            aspect-ratio: 16 / 9; /* Fuerza el formato panorámico */
+            aspect-ratio: 16 / 9;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(28, 44, 84, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
         }
 
         .video-wrapper iframe {
@@ -34,84 +61,150 @@
             border: none;
         }
 
-        /* --- CARPETAS Y BOTONES --- */
-        .columna-cortes-scroll {
-            width: 100%;
-            max-height: 600px; /* Vuelve el límite de altura original */
-            overflow-y: auto; /* Vuelve el scroll original */
-            padding-right: 10px;
+        #seccion-observaciones {
+            background: #fffde7;
+            border-left: 4px solid #fbc02d;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
+        #texto-observaciones {
+            width: 100%;
+            min-height: 80px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: #333;
+            resize: vertical;
+            padding: 10px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #texto-observaciones:focus {
+            border-color: #fbc02d;
+            outline: none;
+        }
+
+        .btn-guardar {
+            background: #fbc02d;
+            color: #856404;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn-guardar:hover {
+            background: #f9a825;
+        }
+
+        /* --- COLUMNA DERECHA (Cortes) --- */
+        .columna-derecha-wrapper {
+            width: 40%;
+            position: relative; /* Actúa como molde para la caja interna */
+        }
+
+        .columna-cortes-scroll {
+            position: absolute; /* Se estira desde el tope hasta la base del molde */
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow-y: auto; 
+            background: #fdfdfd;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #e0e0e0; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+            box-sizing: border-box;
+        }
+
+        /* Diseño de la barrita de scroll */
+        .columna-cortes-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .columna-cortes-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .columna-cortes-scroll::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        .columna-cortes-scroll::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+
+        /* Estilos de carpetas y botones */
         .cat-details {
             background: #ffffff;
             border-radius: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border: 1px solid #e0e0e0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: all 0.3s ease;
         }
         
         .cat-details > summary {
             background: var(--tc-blue, #1c2c54);
             color: #ffffff;
-            padding: 16px 20px;
+            padding: 12px 15px;
             font-weight: 600;
-            font-size: 1.1rem;
             cursor: pointer;
             list-style: none;
-            border-radius: 10px;
-        }
-
-        .cat-details > summary::-webkit-details-marker { display: none; }
-        
-        .cat-details[open] > summary {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
+            border-radius: 9px;
+            font-size: 1rem;
         }
 
         .desc-details {
-            margin: 12px;
+            margin: 8px;
             background: #f8f9fa;
             border-left: 4px solid var(--tc-red, #c9242b);
             border-radius: 6px;
-            padding: 5px 15px;
+            padding: 5px 12px;
         }
-        
-        .desc-details > summary {
-            color: #333;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 12px 0;
-            list-style: none;
-            border-bottom: 1px dashed #ccc;
-        }
-        
-        .desc-details > summary::-webkit-details-marker { display: none; }
         
         .botones-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 12px;
-            padding: 15px 0;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px;
+            padding: 10px 0;
         }
         
         .timestamp-btn {
             background: #ffffff;
             border: 1px solid #d1d5db;
             color: var(--tc-blue, #1c2c54);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 8px;
+            border-radius: 6px;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s ease;
             text-align: center;
         }
 
         .timestamp-btn:hover {
             background: var(--tc-blue, #1c2c54);
             color: #ffffff;
-            border-color: var(--tc-blue, #1c2c54);
+        }
+
+        /* Por si lo mirás desde el celular (las columnas se ponen una abajo de la otra) */
+        @media (max-width: 800px) {
+            .layout-principal {
+                flex-direction: column;
+            }
+            .columna-izquierda, .columna-derecha-wrapper {
+                width: 100%;
+            }
+            .columna-derecha-wrapper {
+                height: 500px; /* En celular sí necesita altura fija */
+            }
         }
     </style>
 </head>
@@ -127,31 +220,39 @@
     </nav>
 
     <div class="container-dashboard">
-        <h2 id="titulo-partido" style="color: var(--tc-blue); margin-bottom: 20px; font-size: 1.6rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">Cargando video...</h2>
+        <h2 id="titulo-partido">Cargando video...</h2>
         
         <div class="layout-principal">
             
-            <!-- REPRODUCTOR DE VIDEO (SIEMPRE ARRIBA) -->
-            <div class="columna-video">
+            <div class="columna-izquierda">
                 <div class="video-wrapper">
                     <div id="player"></div>
                 </div>
+
+                <div id="seccion-observaciones">
+                    <h4 style="margin: 0 0 8px 0; color: #856404; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">📝 Notas y Observaciones</h4>
+                    <textarea id="texto-observaciones" placeholder="Escribe aquí notas tácticas, correcciones para la semana, etc..."></textarea>
+                    <div style="text-align: right;">
+                        <span id="msg-ok" style="color: #2e7d32; font-size: 0.85rem; font-weight: bold; margin-right: 10px; display: none;">✔ Guardado</span>
+                        <button id="btn-guardar-obs" class="btn-guardar">Guardar Cambios</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- CARPETAS DE ANÁLISIS (SIEMPRE ABAJO) -->
-            <div class="columna-cortes-scroll">
-                <h3 style="margin-top: 0; color: var(--tc-blue); font-size: 1.2rem;">📊 Cortes del Partido</h3>
-                <div id="cortes-container">
-                    <p style="color: #666;">Buscando datos...</p>
+            <div class="columna-derecha-wrapper">
+                <div class="columna-cortes-scroll">
+                    <h3 style="margin-top: 0; color: var(--tc-blue); font-size: 1.1rem; margin-bottom: 15px;">📊 Cortes de Análisis</h3>
+                    <div id="cortes-container">
+                        <p style="color: #666;">Buscando datos...</p>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- EL JAVASCRIPT INTACTO -->
     <script type="module">
-        import { db, doc, getDoc } from '../assets/js/firebase.js';
+        import { db, doc, getDoc, updateDoc } from '../assets/js/firebase.js';
 
         let player;
         let videoIdLimpio = ''; 
@@ -168,6 +269,21 @@
             }
         };
 
+        async function guardarNotas() {
+            const nota = document.getElementById('texto-observaciones').value;
+            const msg = document.getElementById('msg-ok');
+            try {
+                await updateDoc(doc(db, "partidos", partidoId), {
+                    observaciones: nota
+                });
+                msg.style.display = 'inline';
+                setTimeout(() => msg.style.display = 'none', 2500);
+            } catch (e) {
+                console.error("Error al guardar:", e);
+                alert("Error al conectar con la base de datos.");
+            }
+        }
+
         async function cargarAnalisis() {
             if (!partidoId) {
                 window.location.href = "../index.html";
@@ -179,9 +295,12 @@
                 
                 if (docSnap.exists()) {
                     const partido = docSnap.data();
+                    
+                    document.getElementById('texto-observaciones').value = partido.observaciones || "";
+                    document.getElementById('btn-guardar-obs').onclick = guardarNotas;
+
                     const eq1 = partido.mi_equipo || 'Nuestro Equipo';
                     const eq2 = partido.rival || 'Rival';
-                    
                     document.getElementById('titulo-partido').textContent = `${eq1} vs ${eq2} - ${partido.fecha}`;
 
                     let rawId = partido.youtube_id;
@@ -199,80 +318,58 @@
 
                     const container = document.getElementById('cortes-container');
                     container.innerHTML = '';
-
                     const agrupado = {};
 
                     for (const [categoria, cortes] of Object.entries(partido.estadisticas)) {
                         agrupado[categoria] = {};
-                        
                         cortes.forEach((corte, index) => {
                             const numCorteOriginal = index + 1; 
-                            
                             if (corte.d && corte.d.length > 0) {
                                 corte.d.forEach(descriptor => {
-                                    if (!agrupado[categoria][descriptor]) {
-                                        agrupado[categoria][descriptor] = [];
-                                    }
+                                    if (!agrupado[categoria][descriptor]) agrupado[categoria][descriptor] = [];
                                     agrupado[categoria][descriptor].push({ ...corte, numCorteOriginal });
                                 });
                             } else {
-                                if (!agrupado[categoria]['General']) {
-                                    agrupado[categoria]['General'] = [];
-                                }
+                                if (!agrupado[categoria]['General']) agrupado[categoria]['General'] = [];
                                 agrupado[categoria]['General'].push({ ...corte, numCorteOriginal });
                             }
                         });
                     }
 
-                    const categoriasOrdenadas = Object.keys(agrupado).sort();
-
-                    categoriasOrdenadas.forEach(cat => {
+                    Object.keys(agrupado).sort().forEach(cat => {
                         const catDetails = document.createElement('details');
                         catDetails.className = 'cat-details';
-                        
                         const catSummary = document.createElement('summary');
                         catSummary.innerHTML = `📁 ${cat}`;
                         catDetails.appendChild(catSummary);
                         
                         const subGrupos = agrupado[cat];
-                        const subGruposKeys = Object.keys(subGrupos).sort();
-                        
-                        subGruposKeys.forEach(desc => {
+                        Object.keys(subGrupos).sort().forEach(desc => {
                             const cortesGrupo = subGrupos[desc];
-                            
                             const descDetails = document.createElement('details');
                             descDetails.className = 'desc-details';
-                            
                             const descSummary = document.createElement('summary');
-                            descSummary.innerHTML = `📂 ${desc} <span style="color:#888; font-size:0.85rem;">(${cortesGrupo.length} cortes)</span>`;
+                            descSummary.innerHTML = `📂 ${desc} <span style="color:#888; font-size:0.8rem;">(${cortesGrupo.length})</span>`;
                             descDetails.appendChild(descSummary);
                             
                             const divBotones = document.createElement('div');
                             divBotones.className = 'botones-container';
-                            
                             cortesGrupo.forEach(corte => {
                                 const btn = document.createElement('button');
                                 btn.className = 'timestamp-btn';
                                 btn.textContent = `▶ Corte ${corte.numCorteOriginal}`;
-                                
-                                btn.onclick = () => {
-                                    if (player && typeof player.seekTo === 'function') {
-                                        player.seekTo(corte.t, true);
-                                    }
-                                };
+                                btn.onclick = () => { if (player) player.seekTo(corte.t, true); };
                                 divBotones.appendChild(btn);
                             });
-                            
                             descDetails.appendChild(divBotones);
                             catDetails.appendChild(descDetails);
                         });
-                        
                         container.appendChild(catDetails);
                     });
                 }
             } catch (error) {
-                console.error("Error al cargar el partido:", error);
-                document.getElementById('titulo-partido').textContent = "Error al cargar los datos.";
+                console.error("Error al cargar:", error);
+                document.getElementById('titulo-partido').textContent = "Error al conectar con Timeline.";
             }
         }
 
