@@ -156,10 +156,21 @@
             listaTC.innerHTML = '';
             listaRivales.innerHTML = '';
 
-            // ORDENAR: Los que tienen partido.importante = true van primero
+            // ORDENAR: Importantes primero, luego por fecha descendente
             const partidosOrdenados = partidos.sort((a, b) => {
-                if (a.importante === b.importante) return 0;
-                return a.importante ? -1 : 1;
+                // 1. Forzamos un booleano estricto para evitar el conflicto entre "undefined" y "false"
+                const esImpA = !!a.importante;
+                const esImpB = !!b.importante;
+
+                if (esImpA !== esImpB) {
+                    return esImpA ? -1 : 1;
+                }
+                
+                // 2. Transformamos el string (YYYY-MM-DD) a milisegundos reales y restamos
+                const tiempoA = new Date(a.fecha || 0).getTime();
+                const tiempoB = new Date(b.fecha || 0).getTime();
+                
+                return tiempoB - tiempoA;
             });
 
             partidosOrdenados.forEach((partido) => {
@@ -190,7 +201,7 @@
             const equipo2 = partido.rival || 'Rival';
 
             // Verificamos si es importante
-            const esImportante = partido.importante;
+            const esImportante = !!partido.importante;
             const iconoEstrella = esImportante ? '⭐' : '☆';
             const colorEstrella = esImportante ? 'opacity: 1;' : 'opacity: 0.5;';
             
@@ -200,7 +211,7 @@
                 card.style.border = '1px solid #cbd5e1'; 
             }
 
-            // MODIFICADO: Incluye el nombre del primer equipo de forma dinámica en la etiqueta
+            // Incluye el nombre del primer equipo de forma dinámica en la etiqueta
             const badgeProximoRival = esImportante 
                 ? `<span style="background-color: #c9242b; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; text-transform: uppercase;">PRÓXIMO RIVAL: ${equipo1}</span>` 
                 : '';
