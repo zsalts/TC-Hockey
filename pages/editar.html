@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Partido - TC Hockey</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -20,17 +22,19 @@
         <div class="header-stats" style="border: none;">
             <div>
                 <h2>Editar Partido</h2>
-                <p class="subtitle">Modificá los datos. Si no subís un nuevo archivo, se mantendrán las estadísticas anteriores.</p>
+                <p class="subtitle">Modificá los datos. Si no subís un nuevo archivo, se mantendrán las estadísticas
+                    anteriores.</p>
             </div>
         </div>
 
         <div class="card-stat" style="display: block;">
             <form id="form-editar" style="display: flex; flex-direction: column; gap: 15px;">
-                
+
                 <div class="form-group-row">
                     <div style="flex: 1;">
                         <label><b>Equipo 1 (Nuestra Columna):</b></label>
-                        <select id="input-mi-equipo" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <select id="input-mi-equipo" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
                             <option value="" disabled selected>Seleccioná un equipo</option>
                             <option value="ONCE UNIDOS">ONCE UNIDOS</option>
                             <option value="TC">TC</option>
@@ -48,7 +52,8 @@
                     </div>
                     <div style="flex: 1;">
                         <label><b>Equipo 2 (Columna Rival):</b></label>
-                        <select id="input-rival" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <select id="input-rival" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
                             <option value="" disabled selected>Seleccioná un equipo</option>
                             <option value="ONCE UNIDOS">ONCE UNIDOS</option>
                             <option value="TC">TC</option>
@@ -69,29 +74,35 @@
                 <div class="form-group-row">
                     <div style="flex: 1;">
                         <label><b>Torneo o Categoría:</b></label>
-                        <input type="text" id="input-torneo" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                        <input type="text" id="input-torneo" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
-                        <input type="date" id="input-fecha" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                        <input type="date" id="input-fecha" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                 </div>
 
                 <div>
                     <label><b>ID de YouTube:</b></label>
-                    <input type="text" id="input-youtube" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="text" id="input-youtube" required
+                        style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
 
-                <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
+                <div
+                    style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
                     <label><b>Reemplazar Cortes (.lgm o .xml) (Opcional):</b></label><br>
-                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Solo subí un archivo si querés sobrescribir los cortes anteriores.</p>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Solo subí un archivo si querés
+                        sobrescribir los cortes anteriores.</p>
                     <input type="file" id="input-xml" accept=".lgm, .xml">
                 </div>
 
-                <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; padding: 15px; background-color: var(--tc-blue);">
+                <button type="submit" id="btn-submit" class="btn-danger"
+                    style="margin-top: 10px; padding: 15px; background-color: var(--tc-blue);">
                     💾 Guardar Cambios
                 </button>
-                
+
                 <p id="mensaje-estado" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
             </form>
         </div>
@@ -105,7 +116,7 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        let estadisticasViejas = {}; 
+        let estadisticasViejas = {};
 
         async function cargarDatosParaEditar() {
             if (!idAEditar) {
@@ -116,20 +127,20 @@
                 const docSnap = await getDoc(doc(db, "partidos", idAEditar));
                 if (docSnap.exists()) {
                     const datos = docSnap.data();
-                    
+
                     document.getElementById('input-mi-equipo').value = datos.mi_equipo;
                     document.getElementById('input-rival').value = datos.rival;
                     document.getElementById('input-fecha').value = datos.fecha;
                     document.getElementById('input-torneo').value = datos.torneo;
                     document.getElementById('input-youtube').value = datos.youtube_id;
-                    estadisticasViejas = datos.estadisticas; 
+                    estadisticasViejas = datos.estadisticas;
                 }
             } catch (error) {
                 console.error("Error trayendo datos", error);
             }
         }
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
             btn.disabled = true;
             btn.textContent = "Actualizando...";
@@ -137,7 +148,7 @@
             mensaje.textContent = "Guardando cambios en Firebase...";
 
             const file = document.getElementById('input-xml').files[0];
-            
+
             const datosActualizados = {
                 mi_equipo: document.getElementById('input-mi-equipo').value,
                 rival: document.getElementById('input-rival').value,
@@ -149,7 +160,7 @@
 
             if (file) {
                 const reader = new FileReader();
-                reader.onload = async function(evento) {
+                reader.onload = async function (evento) {
                     try {
                         const contenidoArchivo = evento.target.result;
                         if (contenidoArchivo.trim().startsWith("{")) {
@@ -190,13 +201,13 @@
 
         function procesarLGM(jsonString) {
             const data = JSON.parse(jsonString);
-            const eventos = data.Timeline; 
+            const eventos = data.Timeline;
             const resultado = {};
             for (let i = 0; i < eventos.length; i++) {
                 let ev = eventos[i];
                 if (!ev.$type || !ev.$type.includes("TimelineEvent")) continue;
-                let categoria = ev.Name.replace(/\s\d+$/, ""); 
-                let tiempo = ev.Start / 1000; 
+                let categoria = ev.Name.replace(/\s\d+$/, "");
+                let tiempo = ev.Start / 1000;
                 let tags = [];
                 if (ev.Tags && ev.Tags.length > 0) {
                     for (let j = 0; j < ev.Tags.length; j++) { tags.push(ev.Tags[j].Value); }
@@ -210,21 +221,65 @@
         function procesarXML(xmlString) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-            const eventos = xmlDoc.getElementsByTagName("evento"); 
-            const resultado = {}; 
+
+            // 1. Busca el nodo principal de cada acción (Cortes / Instancias)
+            let eventos = xmlDoc.getElementsByTagName("evento");
+            if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("instance");
+            if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("Event");
+
+            const resultado = {};
+
             for (let i = 0; i < eventos.length; i++) {
-                let categoria = eventos[i].getElementsByTagName("categoria")[0].textContent;
-                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent); 
-                let nodosTags = eventos[i].getElementsByTagName("descriptor");
+                let ev = eventos[i];
+
+                // 2. Busca el nombre del botón o la categoría
+                let nodoCategoria = ev.getElementsByTagName("categoria")[0] ||
+                    ev.getElementsByTagName("code")[0] ||
+                    ev.getElementsByTagName("Category")[0] ||
+                    ev.getElementsByTagName("Name")[0];
+
+                // 3. Busca el tiempo de inicio del corte
+                let nodoTiempo = ev.getElementsByTagName("tiempo")[0] ||
+                    ev.getElementsByTagName("start")[0] ||
+                    ev.getElementsByTagName("Start")[0];
+
+                // Si el corte no tiene categoría o tiempo válido, pasa al siguiente para no romper el bucle
+                if (!nodoCategoria || !nodoTiempo) continue;
+
+                // Limpiamos espacios y quitamos números del final de la categoría si los hay (ej: "Ataque 1" -> "Ataque")
+                let categoria = nodoCategoria.textContent.trim().replace(/\s\d+$/, "");
+                let tiempo = parseFloat(nodoTiempo.textContent);
+
+                // Si el software exportó el tiempo en milisegundos (ej: 45000 en vez de 45), lo pasa a segundos
+                if (tiempo > 12000) {
+                    tiempo = tiempo / 1000;
+                }
+
+                // 4. Busca las etiquetas de los jugadores o descriptores de la acción
+                let nodosTags = ev.getElementsByTagName("descriptor");
+                if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("label");
+                if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("tag");
+
                 let tags = [];
-                for (let j = 0; j < nodosTags.length; j++) { tags.push(nodosTags[j].textContent); }
-                if (!resultado[categoria]) resultado[categoria] = []; 
+                for (let j = 0; j < nodosTags.length; j++) {
+                    // Algunos XML meten el texto dentro de una subetiqueta <text>
+                    let nodoTexto = nodosTags[j].getElementsByTagName("text")[0];
+                    let tagTexto = nodoTexto ? nodoTexto.textContent : nodosTags[j].textContent;
+
+                    if (tagTexto && tagTexto.trim() !== "") {
+                        tags.push(tagTexto.trim());
+                    }
+                }
+
+                if (!resultado[categoria]) resultado[categoria] = [];
                 resultado[categoria].push({ t: tiempo, d: tags });
             }
+
             return resultado;
         }
 
         cargarDatosParaEditar();
     </script>
 </body>
+
 </html>

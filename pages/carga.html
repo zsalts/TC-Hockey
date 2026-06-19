@@ -197,26 +197,64 @@
         }
 
         function procesarXML(xmlString) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-            const eventos = xmlDoc.getElementsByTagName("evento"); 
-            const resultado = {}; 
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    
+    // 1. Busca el nodo principal de cada acción (Cortes / Instancias)
+    let eventos = xmlDoc.getElementsByTagName("evento");
+    if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("instance");
+    if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("Event");
+    
+    const resultado = {}; 
 
-            for (let i = 0; i < eventos.length; i++) {
-                let categoria = eventos[i].getElementsByTagName("categoria")[0].textContent;
-                let tiempo = parseFloat(eventos[i].getElementsByTagName("tiempo")[0].textContent); 
-                
-                let nodosTags = eventos[i].getElementsByTagName("descriptor");
-                let tags = [];
-                for (let j = 0; j < nodosTags.length; j++) {
-                    tags.push(nodosTags[j].textContent);
-                }
-
-                if (!resultado[categoria]) resultado[categoria] = []; 
-                resultado[categoria].push({ t: tiempo, d: tags });
-            }
-            return resultado;
+    for (let i = 0; i < eventos.length; i++) {
+        let ev = eventos[i];
+        
+        // 2. Busca el nombre del botón o la categoría
+        let nodoCategoria = ev.getElementsByTagName("categoria")[0] || 
+                            ev.getElementsByTagName("code")[0] || 
+                            ev.getElementsByTagName("Category")[0] ||
+                            ev.getElementsByTagName("Name")[0];
+        
+        // 3. Busca el tiempo de inicio del corte
+        let nodoTiempo = ev.getElementsByTagName("tiempo")[0] || 
+                         ev.getElementsByTagName("start")[0] || 
+                         ev.getElementsByTagName("Start")[0];
+        
+        // Si el corte no tiene categoría o tiempo válido, pasa al siguiente para no romper el bucle
+        if (!nodoCategoria || !nodoTiempo) continue; 
+        
+        // Limpiamos espacios y quitamos números del final de la categoría si los hay (ej: "Ataque 1" -> "Ataque")
+        let categoria = nodoCategoria.textContent.trim().replace(/\s\d+$/, "");
+        let tiempo = parseFloat(nodoTiempo.textContent); 
+        
+        // Si el software exportó el tiempo en milisegundos (ej: 45000 en vez de 45), lo pasa a segundos
+        if (tiempo > 12000) { 
+            tiempo = tiempo / 1000;
         }
+        
+        // 4. Busca las etiquetas de los jugadores o descriptores de la acción
+        let nodosTags = ev.getElementsByTagName("descriptor");
+        if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("label");
+        if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("tag");
+
+        let tags = [];
+        for (let j = 0; j < nodosTags.length; j++) {
+            // Algunos XML meten el texto dentro de una subetiqueta <text>
+            let nodoTexto = nodosTags[j].getElementsByTagName("text")[0];
+            let tagTexto = nodoTexto ? nodoTexto.textContent : nodosTags[j].textContent;
+            
+            if (tagTexto && tagTexto.trim() !== "") {
+                tags.push(tagTexto.trim());
+            }
+        }
+
+        if (!resultado[categoria]) resultado[categoria] = []; 
+        resultado[categoria].push({ t: tiempo, d: tags });
+    }
+    
+    return resultado;
+}
     </script>
 </body>
 </html>
