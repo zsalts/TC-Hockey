@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial - TC Hockey</title>
+    
+    <!-- PWA: Manifiesto y color de la barra del navegador -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1c2c54">
+
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         /* Grilla responsive sin tocar el JS */
@@ -322,6 +327,17 @@
         });
 
         cargarHistorial();
+    </script>
+    
+    <!-- PWA: Registro del Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito', reg))
+                    .catch(err => console.error('Error al registrar el Service Worker', err));
+            });
+        }
     </script>
 </body>
 </html>

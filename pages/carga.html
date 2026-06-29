@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cargar Partido - TC Hockey</title>
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -26,11 +29,12 @@
 
         <div class="card-stat" style="display: block;">
             <form id="form-carga" style="display: flex; flex-direction: column; gap: 15px;">
-                
+
                 <div class="form-group-row">
                     <div style="flex: 1;">
                         <label><b>Equipo 1 (Nuestra Columna):</b></label>
-                        <select id="input-mi-equipo" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <select id="input-mi-equipo" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
                             <option value="" disabled selected>Seleccioná un equipo</option>
                             <option value="ONCE UNIDOS">ONCE UNIDOS</option>
                             <option value="TC">TC</option>
@@ -48,7 +52,8 @@
                     </div>
                     <div style="flex: 1;">
                         <label><b>Equipo 2 (Columna Rival):</b></label>
-                        <select id="input-rival" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
+                        <select id="input-rival" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: white;">
                             <option value="" disabled selected>Seleccioná un equipo</option>
                             <option value="ONCE UNIDOS">ONCE UNIDOS</option>
                             <option value="TC">TC</option>
@@ -69,20 +74,24 @@
                 <div class="form-group-row">
                     <div style="flex: 1;">
                         <label><b>Torneo o Categoría:</b></label>
-                        <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                        <input type="text" id="input-torneo" placeholder="Ej: Torneo Oficial" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                     <div style="flex: 1;">
                         <label><b>Fecha:</b></label>
-                        <input type="date" id="input-fecha" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                        <input type="date" id="input-fecha" required
+                            style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
                 </div>
 
                 <div>
                     <label><b>ID de YouTube:</b></label>
-                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="text" id="input-youtube" placeholder="Ej: M7lc1UVf-VE" required
+                        style="padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
 
-                <div style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
+                <div
+                    style="margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed var(--tc-blue);">
                     <label><b>Archivo de Análisis (.lgm o .xml) (Opcional):</b></label><br>
                     <input type="file" id="input-xml" accept=".lgm, .xml" style="margin-top: 10px;">
                 </div>
@@ -90,7 +99,7 @@
                 <button type="submit" id="btn-submit" class="btn-danger" style="margin-top: 10px; padding: 15px;">
                     🚀 Guardar en Base de Datos
                 </button>
-                
+
                 <p id="mensaje-estado" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
             </form>
         </div>
@@ -103,15 +112,15 @@
         const mensaje = document.getElementById('mensaje-estado');
         const btn = document.getElementById('btn-submit');
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const file = document.getElementById('input-xml').files[0];
 
             btn.disabled = true;
             btn.textContent = "Procesando...";
             mensaje.style.color = "blue";
-            
+
             mensaje.textContent = file ? "Leyendo archivo y conectando con la nube..." : "Guardando partido sin cortes...";
 
             const partidoNuevo = {
@@ -142,7 +151,7 @@
 
             if (file) {
                 const reader = new FileReader();
-                reader.onload = async function(evento) {
+                reader.onload = async function (evento) {
                     try {
                         const contenidoArchivo = evento.target.result;
                         let estadisticas;
@@ -166,22 +175,22 @@
                 };
                 reader.readAsText(file);
             } else {
-                partidoNuevo.estadisticas = {}; 
+                partidoNuevo.estadisticas = {};
                 await guardarEnBaseDeDatos(partidoNuevo);
             }
         });
 
         function procesarLGM(jsonString) {
             const data = JSON.parse(jsonString);
-            const eventos = data.Timeline; 
+            const eventos = data.Timeline;
             const resultado = {};
 
             for (let i = 0; i < eventos.length; i++) {
                 let ev = eventos[i];
                 if (!ev.$type || !ev.$type.includes("TimelineEvent")) continue;
 
-                let categoria = ev.Name.replace(/\s\d+$/, ""); 
-                let tiempo = ev.Start / 1000; 
+                let categoria = ev.Name.replace(/\s\d+$/, "");
+                let tiempo = ev.Start / 1000;
 
                 let tags = [];
                 if (ev.Tags && ev.Tags.length > 0) {
@@ -197,64 +206,65 @@
         }
 
         function procesarXML(xmlString) {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-    
-    // 1. Busca el nodo principal de cada acción (Cortes / Instancias)
-    let eventos = xmlDoc.getElementsByTagName("evento");
-    if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("instance");
-    if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("Event");
-    
-    const resultado = {}; 
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
 
-    for (let i = 0; i < eventos.length; i++) {
-        let ev = eventos[i];
-        
-        // 2. Busca el nombre del botón o la categoría
-        let nodoCategoria = ev.getElementsByTagName("categoria")[0] || 
-                            ev.getElementsByTagName("code")[0] || 
-                            ev.getElementsByTagName("Category")[0] ||
-                            ev.getElementsByTagName("Name")[0];
-        
-        // 3. Busca el tiempo de inicio del corte
-        let nodoTiempo = ev.getElementsByTagName("tiempo")[0] || 
-                         ev.getElementsByTagName("start")[0] || 
-                         ev.getElementsByTagName("Start")[0];
-        
-        // Si el corte no tiene categoría o tiempo válido, pasa al siguiente para no romper el bucle
-        if (!nodoCategoria || !nodoTiempo) continue; 
-        
-        // Limpiamos espacios y quitamos números del final de la categoría si los hay (ej: "Ataque 1" -> "Ataque")
-        let categoria = nodoCategoria.textContent.trim().replace(/\s\d+$/, "");
-        let tiempo = parseFloat(nodoTiempo.textContent); 
-        
-        // Si el software exportó el tiempo en milisegundos (ej: 45000 en vez de 45), lo pasa a segundos
-        if (tiempo > 12000) { 
-            tiempo = tiempo / 1000;
-        }
-        
-        // 4. Busca las etiquetas de los jugadores o descriptores de la acción
-        let nodosTags = ev.getElementsByTagName("descriptor");
-        if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("label");
-        if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("tag");
+            // 1. Busca el nodo principal de cada acción (Cortes / Instancias)
+            let eventos = xmlDoc.getElementsByTagName("evento");
+            if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("instance");
+            if (eventos.length === 0) eventos = xmlDoc.getElementsByTagName("Event");
 
-        let tags = [];
-        for (let j = 0; j < nodosTags.length; j++) {
-            // Algunos XML meten el texto dentro de una subetiqueta <text>
-            let nodoTexto = nodosTags[j].getElementsByTagName("text")[0];
-            let tagTexto = nodoTexto ? nodoTexto.textContent : nodosTags[j].textContent;
-            
-            if (tagTexto && tagTexto.trim() !== "") {
-                tags.push(tagTexto.trim());
+            const resultado = {};
+
+            for (let i = 0; i < eventos.length; i++) {
+                let ev = eventos[i];
+
+                // 2. Busca el nombre del botón o la categoría
+                let nodoCategoria = ev.getElementsByTagName("categoria")[0] ||
+                    ev.getElementsByTagName("code")[0] ||
+                    ev.getElementsByTagName("Category")[0] ||
+                    ev.getElementsByTagName("Name")[0];
+
+                // 3. Busca el tiempo de inicio del corte
+                let nodoTiempo = ev.getElementsByTagName("tiempo")[0] ||
+                    ev.getElementsByTagName("start")[0] ||
+                    ev.getElementsByTagName("Start")[0];
+
+                // Si el corte no tiene categoría o tiempo válido, pasa al siguiente para no romper el bucle
+                if (!nodoCategoria || !nodoTiempo) continue;
+
+                // Limpiamos espacios y quitamos números del final de la categoría si los hay (ej: "Ataque 1" -> "Ataque")
+                let categoria = nodoCategoria.textContent.trim().replace(/\s\d+$/, "");
+                let tiempo = parseFloat(nodoTiempo.textContent);
+
+                // Si el software exportó el tiempo en milisegundos (ej: 45000 en vez de 45), lo pasa a segundos
+                if (tiempo > 12000) {
+                    tiempo = tiempo / 1000;
+                }
+
+                // 4. Busca las etiquetas de los jugadores o descriptores de la acción
+                let nodosTags = ev.getElementsByTagName("descriptor");
+                if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("label");
+                if (nodosTags.length === 0) nodosTags = ev.getElementsByTagName("tag");
+
+                let tags = [];
+                for (let j = 0; j < nodosTags.length; j++) {
+                    // Algunos XML meten el texto dentro de una subetiqueta <text>
+                    let nodoTexto = nodosTags[j].getElementsByTagName("text")[0];
+                    let tagTexto = nodoTexto ? nodoTexto.textContent : nodosTags[j].textContent;
+
+                    if (tagTexto && tagTexto.trim() !== "") {
+                        tags.push(tagTexto.trim());
+                    }
+                }
+
+                if (!resultado[categoria]) resultado[categoria] = [];
+                resultado[categoria].push({ t: tiempo, d: tags });
             }
-        }
 
-        if (!resultado[categoria]) resultado[categoria] = []; 
-        resultado[categoria].push({ t: tiempo, d: tags });
-    }
-    
-    return resultado;
-}
+            return resultado;
+        }
     </script>
 </body>
+
 </html>
