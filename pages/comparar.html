@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar Videos - TC Hockey</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/image/logo.jpg">
+    <meta name="theme-color" content="#1c2c54">
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .comparativa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .header-acciones {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+        }
+
+        .video-columna {
+            display: flex; flex-direction: column; gap: 10px;
+            background: #f8f9fa; padding: 15px; border-radius: 12px;
+            border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* BOTÓN GRANDE PARA ELEGIR */
+        .btn-elegir {
+            padding: 10px 15px; border-radius: 6px; border: 1px solid var(--tc-blue);
+            background: white; font-size: 1rem; font-weight: bold;
+            color: var(--tc-blue); cursor: pointer; flex: 1; text-align: left;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: 0.2s;
+        }
+        .btn-elegir:hover { background: #f0f4ff; }
+
+        /* BOTÓN CHIQUITO PARA LA X */
+        .btn-eliminar-col {
+            background: #ffebe9; color: #c9242b; border: 1px solid #ffc1c0;
+            border-radius: 6px; cursor: pointer; 
+            width: 42px; /* Ancho fijo y chiquito */
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; transition: 0.2s; flex-shrink: 0;
+        }
+        .btn-eliminar-col:hover { background: #ffc1c0; }
+
+        .video-wrapper { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
+        .video-wrapper iframe { width: 100% !important; height: 100% !important; border: none; }
+        .cortes-wrapper { max-height: 400px; overflow-y: auto; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+
+        /* Estilos de botones de corte */
+        .cat-details { background: #ffffff; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e0e0e0; }
+        .cat-details > summary { background: var(--tc-blue); color: white; padding: 10px; font-weight: 600; cursor: pointer; list-style: none; border-radius: 6px; font-size: 0.9rem;}
+        .desc-details { margin: 5px; background: #f8f9fa; border-left: 4px solid var(--tc-red); border-radius: 4px; padding: 5px 10px; }
+        .botones-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 5px; padding: 8px 0; }
+        .timestamp-btn { background: #ffffff; border: 1px solid #d1d5db; color: var(--tc-blue); padding: 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; }
+        .timestamp-btn:hover { background: var(--tc-blue); color: white; }
+
+        /* --- ESTILOS DE LA VENTANA MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: #f4f6f9; width: 90%; max-width: 900px; max-height: 85vh;
+            border-radius: 12px; padding: 20px; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .grid-partidos {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <img src="../assets/image/logo.jpg" alt="Logo TC Hockey" class="logo">
+        <ul class="nav-links">
+            <li><a href="../index.html">Historial</a></li>
+            <li><a href="video.html">Video</a></li>
+            <li><a href="estadisticas.html">Estadísticas</a></li>
+            <li><a href="comparar.html" class="active">Comparar</a></li>
+        </ul>
+    </nav>
+
+    <div class="container-dashboard">
+        <div class="header-stats">
+            <div class="header-acciones">
+                <div>
+                    <h2>Comparador Táctico Dinámico</h2>
+                    <p class="subtitle">Agregá y compará múltiples partidos en simultáneo</p>
+                </div>
+                <button id="btn-sumar-video" class="btn-danger" style="padding: 10px 15px; font-size: 1rem; cursor:pointer;">
+                    ➕ Sumar Video
+                </button>
+            </div>
+        </div>
+
+        <div id="grid-comparativa" class="comparativa-grid"></div>
+    </div>
+
+    <div id="modal-seleccion" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: var(--tc-blue);">Historial: Elegir Partido</h2>
+                <button onclick="cerrarModal()" class="btn-danger" style="padding: 5px 15px; font-size: 0.9rem; cursor:pointer;">Cerrar ❌</button>
+            </div>
+            
+            <input type="text" id="buscador-modal" placeholder="🔍 Buscar por equipo o torneo..." style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box;">
+            
+            <div id="modal-grid-partidos" class="grid-partidos">
+                <p>Cargando base de datos...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, getDocs } from '../assets/js/firebase.js';
+
+        let reproductoresYT = {}; 
+        let partidosData = {}; 
+        let partidosArreglo = []; 
+        let contadorColumnas = 0;
+        let apiLista = false;
+        let columnaActivaParaModal = null; 
+
+        window.onYouTubeIframeAPIReady = () => { apiLista = true; };
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+
+        async function inicializar() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "partidos"));
+                partidosArreglo = [];
+                
+                querySnapshot.forEach(doc => {
+                    const p = doc.data();
+                    partidosData[doc.id] = p;
+                    partidosArreglo.push({ id: doc.id, ...p });
+                });
+
+                partidosArreglo.sort((a, b) => {
+                    const esImpA = !!a.importante;
+                    const esImpB = !!b.importante;
+                    if (esImpA !== esImpB) return esImpA ? -1 : 1;
+                    return new Date(b.fecha || 0) - new Date(a.fecha || 0);
+                });
+
+                crearColumna();
+                crearColumna();
+
+            } catch (error) {
+                console.error("Error al cargar partidos", error);
+            }
+        }
+
+        window.crearColumna = function() {
+            contadorColumnas++;
+            const colId = `col-${contadorColumnas}`;
+            const colDiv = document.createElement('div');
+            colDiv.className = 'video-columna';
+            colDiv.id = colId;
+            
+            // Acá invertimos el orden: Botón GIGANTE primero, X CHIQUITA después
+            colDiv.innerHTML = `
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-elegir-${colId}" class="btn-elegir" onclick="abrirModal('${colId}')">
+                        🔍 Tocar para elegir partido...
+                    </button>
+                    <button class="btn-eliminar-col" onclick="eliminarColumna('${colId}')" title="Quitar Video">❌</button>
+                </div>
+                <div class="video-wrapper">
+                    <div id="player-${colId}"></div>
+                </div>
+                <div class="cortes-wrapper" id="cortes-${colId}">
+                    <p style="text-align: center; color: #666; margin-top: 20px;">Esperando selección de video.</p>
+                </div>
+            `;
+            document.getElementById('grid-comparativa').appendChild(colDiv);
+        };
+
+        window.eliminarColumna = function(colId) {
+            const colDiv = document.getElementById(colId);
+            if (colDiv) colDiv.remove();
+            if (reproductoresYT[colId]) delete reproductoresYT[colId];
+        };
+
+        window.abrirModal = function(colId) {
+            columnaActivaParaModal = colId;
+            document.getElementById('modal-seleccion').style.display = 'flex';
+            renderizarPartidosModal(partidosArreglo);
+        };
+
+        window.cerrarModal = function() {
+            document.getElementById('modal-seleccion').style.display = 'none';
+            columnaActivaParaModal = null;
+        };
+
+        function renderizarPartidosModal(lista) {
+            const contenedor = document.getElementById('modal-grid-partidos');
+            contenedor.innerHTML = '';
+
+            if(lista.length === 0) {
+                contenedor.innerHTML = '<p>No se encontraron partidos.</p>';
+                return;
+            }
+
+            lista.forEach(partido => {
+                const card = document.createElement('div');
+                card.className = 'card-stat';
+                card.style.cursor = 'pointer';
+                card.style.flexDirection = 'column';
+                card.style.alignItems = 'flex-start';
+                
+                const esImportante = !!partido.importante;
+                if (esImportante) {
+                    card.style.backgroundColor = '#e2e8f0'; 
+                    card.style.border = '1px solid #cbd5e1'; 
+                }
+
+                const eq1 = partido.mi_equipo || 'Nuestro Equipo';
+                const eq2 = partido.rival || 'Rival';
+
+                card.innerHTML = `
+                    <div style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="subtitle" style="text-transform: uppercase; color: var(--tc-red); font-weight: bold;">
+                                ${partido.torneo} ${esImportante ? '⭐' : ''}
+                            </span>
+                        </div>
+                        <h3 style="margin: 10px 0; color: var(--tc-blue); font-size: 1.2rem;">${eq1} <br><span style="color: #666; font-size: 1rem;">vs</span> ${eq2}</h3>
+                        <div style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;">
+                            <span style="color: #666; font-size: 0.9rem;">📅 ${partido.fecha}</span>
+                        </div>
+                    </div>
+                `;
+
+                card.onclick = () => seleccionarPartidoParaColumna(partido.id);
+                contenedor.appendChild(card);
+            });
+        }
+
+        window.seleccionarPartidoParaColumna = function(partidoId) {
+            if(!columnaActivaParaModal) return;
+            
+            const partido = partidosData[partidoId];
+            const eq1 = partido.mi_equipo || 'Eq1';
+            const eq2 = partido.rival || 'Eq2';
+            
+            const btn = document.getElementById(`btn-elegir-${columnaActivaParaModal}`);
+            btn.innerHTML = `🏑 ${eq1} vs ${eq2} <span style="color:#666; font-weight:normal; font-size:0.8rem;">(${partido.fecha})</span>`;
+
+            cargarPartidoEnColumna(partidoId, columnaActivaParaModal);
+            cerrarModal();
+        };
+
+        document.getElementById('buscador-modal').addEventListener('input', (e) => {
+            const texto = e.target.value.toLowerCase();
+            const filtrados = partidosArreglo.filter(p => 
+                (p.rival && p.rival.toLowerCase().includes(texto)) || 
+                (p.mi_equipo && p.mi_equipo.toLowerCase().includes(texto)) || 
+                (p.torneo && p.torneo.toLowerCase().includes(texto))
+            );
+            renderizarPartidosModal(filtrados);
+        });
+
+        document.getElementById('modal-seleccion').addEventListener('click', (e) => {
+            if(e.target === document.getElementById('modal-seleccion')) cerrarModal();
+        });
+
+        function extraerYoutubeId(rawId) {
+            if (!rawId) return '';
+            if (rawId.includes('v=')) return rawId.split('v=')[1].substring(0, 11);
+            if (rawId.includes('youtu.be/')) return rawId.split('youtu.be/')[1].substring(0, 11);
+            return rawId;
+        }
+
+        function cargarPartidoEnColumna(partidoId, colId) {
+            const cortesContainer = document.getElementById(`cortes-${colId}`);
+            const partido = partidosData[partidoId];
+            const videoId = extraerYoutubeId(partido.youtube_id);
+
+            if (apiLista) {
+                if (reproductoresYT[colId]) {
+                    reproductoresYT[colId].loadVideoById(videoId);
+                } else {
+                    reproductoresYT[colId] = new YT.Player(`player-${colId}`, { 
+                        videoId: videoId, 
+                        playerVars: { 'playsinline': 1 }
+                    });
+                }
+            } else {
+                setTimeout(() => cargarPartidoEnColumna(partidoId, colId), 500); 
+                return;
+            }
+
+            if (!partido.estadisticas) {
+                cortesContainer.innerHTML = '<p style="text-align:center; color:#666;">No hay cortes para este partido.</p>';
+                return;
+            }
+
+            cortesContainer.innerHTML = '';
+            const agrupado = {};
+
+            for (const [categoria, cortes] of Object.entries(partido.estadisticas)) {
+                agrupado[categoria] = {};
+                cortes.forEach((corte, index) => {
+                    const numCorte = index + 1;
+                    if (corte.d && corte.d.length > 0) {
+                        corte.d.forEach(descriptor => {
+                            if (!agrupado[categoria][descriptor]) agrupado[categoria][descriptor] = [];
+                            agrupado[categoria][descriptor].push({ ...corte, numCorte });
+                        });
+                    } else {
+                        if (!agrupado[categoria]['General']) agrupado[categoria]['General'] = [];
+                        agrupado[categoria]['General'].push({ ...corte, numCorte });
+                    }
+                });
+            }
+
+            Object.keys(agrupado).sort().forEach(cat => {
+                const catDetails = document.createElement('details');
+                catDetails.className = 'cat-details';
+                catDetails.innerHTML = `<summary>📁 ${cat}</summary>`;
+                
+                const subGrupos = agrupado[cat];
+                Object.keys(subGrupos).sort().forEach(desc => {
+                    const cortesGrupo = subGrupos[desc];
+                    const descDetails = document.createElement('details');
+                    descDetails.className = 'desc-details';
+                    descDetails.innerHTML = `<summary>📂 ${desc} <span style="color:#888; font-size:0.8rem;">(${cortesGrupo.length})</span></summary>`;
+                    
+                    const divBotones = document.createElement('div');
+                    divBotones.className = 'botones-container';
+                    cortesGrupo.forEach(corte => {
+                        const btn = document.createElement('button');
+                        btn.className = 'timestamp-btn';
+                        btn.textContent = `▶ C ${corte.numCorte}`;
+                        
+                        btn.onclick = () => {
+                            if (reproductoresYT[colId]) reproductoresYT[colId].seekTo(corte.t, true);
+                        };
+                        divBotones.appendChild(btn);
+                    });
+                    descDetails.appendChild(divBotones);
+                    catDetails.appendChild(descDetails);
+                });
+                cortesContainer.appendChild(catDetails);
+            });
+        }
+
+        document.getElementById('btn-sumar-video').addEventListener('click', () => crearColumna());
+
+        inicializar();
+    </script>
+</body>
+</html>
