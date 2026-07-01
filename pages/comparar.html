@@ -11,53 +11,112 @@
 
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        .comparativa-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        /* --- MAGIA PARA QUE OCUPE EXACTAMENTE 1 PANTALLA --- */
+        body {
+            height: 100vh; /* 100% de la altura de la ventana */
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Elimina el scroll vertical de toda la página */
+            background-color: #f4f6f9;
+        }
+
+        .container-dashboard {
+            flex: 1; /* Ocupa todo el espacio debajo de la barra de navegación */
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 1800px;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        .header-stats {
+            flex-shrink: 0; /* Evita que el título se achique */
+            margin-bottom: 15px;
+            padding: 0;
+            border: none;
         }
 
         .header-acciones {
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+            display: flex; justify-content: space-between; align-items: center; gap: 15px;
+        }
+
+        .comparativa-grid {
+            flex: 1; /* Ocupa el alto exacto que sobra abajo del título */
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            overflow-x: auto; /* Si agregás 4 videos, aparece un scroll horizontal */
+            overflow-y: hidden;
+            min-height: 0; /* Truco de CSS para que los hijos respeten el límite */
+            padding-bottom: 10px; /* Espacio para la barrita de scroll horizontal */
         }
 
         .video-columna {
-            display: flex; flex-direction: column; gap: 10px;
-            background: #f8f9fa; padding: 15px; border-radius: 12px;
-            border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex: 1; /* Las columnas se reparten el ancho */
+            min-width: 350px; /* Ancho mínimo para que el video no se rompa */
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px;
+            background: #e9ecef; 
+            padding: 12px; 
+            border-radius: 12px;
+            border: 1px solid #ced4da; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-height: 0; /* Crucial para el scroll interno de los cortes */
         }
 
-        /* BOTÓN GRANDE PARA ELEGIR */
+        /* Botones superiores de la columna */
         .btn-elegir {
-            padding: 10px 15px; border-radius: 6px; border: 1px solid var(--tc-blue);
-            background: white; font-size: 1rem; font-weight: bold;
+            padding: 8px 12px; border-radius: 6px; border: 1px solid var(--tc-blue);
+            background: white; font-size: 0.95rem; font-weight: bold;
             color: var(--tc-blue); cursor: pointer; flex: 1; text-align: left;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             transition: 0.2s;
         }
         .btn-elegir:hover { background: #f0f4ff; }
 
-        /* BOTÓN CHIQUITO PARA LA X */
         .btn-eliminar-col {
             background: #ffebe9; color: #c9242b; border: 1px solid #ffc1c0;
             border-radius: 6px; cursor: pointer; 
-            width: 42px; /* Ancho fijo y chiquito */
+            width: 40px; 
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; transition: 0.2s; flex-shrink: 0;
         }
         .btn-eliminar-col:hover { background: #ffc1c0; }
 
-        .video-wrapper { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
+        /* Video y Cortes */
+        .video-wrapper { 
+            width: 100%; aspect-ratio: 16 / 9; background: #000; 
+            border-radius: 8px; overflow: hidden; flex-shrink: 0; 
+        }
         .video-wrapper iframe { width: 100% !important; height: 100% !important; border: none; }
-        .cortes-wrapper { max-height: 400px; overflow-y: auto; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        
+        .cortes-wrapper { 
+            flex: 1; /* TOMA TODO EL ALTO RESTANTE DE LA COLUMNA */
+            overflow-y: auto; /* SCROLL INTERNO SOLO ACÁ */
+            background: #ffffff; padding: 10px; border-radius: 8px; 
+            border: 1px solid #ccc;
+        }
+
+        /* Diseño de la barrita de scroll interna para que quede prolija */
+        .cortes-wrapper::-webkit-scrollbar { width: 6px; }
+        .cortes-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .cortes-wrapper::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .cortes-wrapper::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        .comparativa-grid::-webkit-scrollbar { height: 8px; }
+        .comparativa-grid::-webkit-scrollbar-track { background: #e9ecef; border-radius: 4px; }
+        .comparativa-grid::-webkit-scrollbar-thumb { background: var(--tc-blue); border-radius: 4px; }
 
         /* Estilos de botones de corte */
         .cat-details { background: #ffffff; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e0e0e0; }
-        .cat-details > summary { background: var(--tc-blue); color: white; padding: 10px; font-weight: 600; cursor: pointer; list-style: none; border-radius: 6px; font-size: 0.9rem;}
+        .cat-details > summary { background: var(--tc-blue); color: white; padding: 8px 10px; font-weight: 600; cursor: pointer; list-style: none; border-radius: 6px; font-size: 0.85rem;}
         .desc-details { margin: 5px; background: #f8f9fa; border-left: 4px solid var(--tc-red); border-radius: 4px; padding: 5px 10px; }
         .botones-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 5px; padding: 8px 0; }
-        .timestamp-btn { background: #ffffff; border: 1px solid #d1d5db; color: var(--tc-blue); padding: 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; }
+        .timestamp-btn { background: #ffffff; border: 1px solid #d1d5db; color: var(--tc-blue); padding: 5px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; }
         .timestamp-btn:hover { background: var(--tc-blue); color: white; }
 
         /* --- ESTILOS DE LA VENTANA MODAL --- */
@@ -91,8 +150,8 @@
         <div class="header-stats">
             <div class="header-acciones">
                 <div>
-                    <h2>Comparador Táctico Dinámico</h2>
-                    <p class="subtitle">Agregá y compará múltiples partidos en simultáneo</p>
+                    <h2 style="margin:0;">Comparador Táctico Dinámico</h2>
+                    <p class="subtitle" style="margin-top: 5px;">Agregá y compará múltiples partidos en simultáneo</p>
                 </div>
                 <button id="btn-sumar-video" class="btn-danger" style="padding: 10px 15px; font-size: 1rem; cursor:pointer;">
                     ➕ Sumar Video
@@ -103,6 +162,7 @@
         <div id="grid-comparativa" class="comparativa-grid"></div>
     </div>
 
+    <!-- VENTANA MODAL EXTERNA PARA ELEGIR PARTIDO -->
     <div id="modal-seleccion" class="modal-overlay">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -166,7 +226,6 @@
             colDiv.className = 'video-columna';
             colDiv.id = colId;
             
-            // Acá invertimos el orden: Botón GIGANTE primero, X CHIQUITA después
             colDiv.innerHTML = `
                 <div style="display: flex; gap: 8px;">
                     <button id="btn-elegir-${colId}" class="btn-elegir" onclick="abrirModal('${colId}')">
